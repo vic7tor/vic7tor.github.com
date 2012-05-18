@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Welcome
+title: 冰柠绿茶
 tagline: Every legend has a story in it
 ---
 {% include JB/setup %}

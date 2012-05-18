@@ -3,7 +3,7 @@ layout: post
 title: "Android Config And Build System"
 description: ""
 category: android
-tags: [anroid]
+tags: [android]
 ---
 {% include JB/setup %}
 
