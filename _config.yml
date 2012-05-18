@@ -10,11 +10,11 @@ pygments: true
 # so be sure to set them if your theme uses them.
 #
 title : ice tea
-tagline: Site Tagline
+tagline: Every legend has a story in it.
 author :
   name : Victor Wen
   email : 
-  github : vic7tor
+  github : 5victor
   twitter : username
   feedburner : feedname
 
