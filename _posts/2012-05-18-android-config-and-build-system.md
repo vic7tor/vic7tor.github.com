@@ -51,3 +51,57 @@ Makefile at top dir of source code only has one line: include build/core/main.mk
 ## main.mk include some *.mk files
 AndroidBoard.mk Boardconfig.mk use grep in build/core
 
+# envsetup.sh配置系统导出的环境变量的作用
+在envsetup.sh的lunch()中，导出了
+	614         export TARGET_PRODUCT=$product
+	615         export TARGET_BUILD_VARIANT=$variant
+	616         export TARGET_SIMULATOR=false
+	617         export TARGET_BUILD_TYPE=release
+## TARGET_ARCH_VARIANT是怎么来的
+在envsetup.sh中lunch()最后的函数会调用build/core/config.mk
+在config.mk中
+	129 board_config_mk := \
+	130         $(strip $(wildcard \
+	131                 $(SRC_TARGET_DIR)/board/$(TARGET_DEVICE)/BoardConfig.mk \
+	132                 device/*/$(TARGET_DEVICE)/BoardConfig.mk \
+	133                 vendor/*/$(TARGET_DEVICE)/BoardConfig.mk \
+	134         ))
+在BoardConfig.mk中有啥货呢？你懂的
+
+##上节上TARGET_DEVICE是怎么来的
+config.mk包含了envsetup.mk, envsetup.mk包含了product_config.mk。
+product_config.mk中:
+INTERNAL_PRODUCT := $(call resolve-short-product-name, $(TARGET_PRODUCT))
+TARGET_DEVICE := $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_DEVICE)
+神奇的PRODUCTS.xx.PRODUCT_DEVICE是什么东东？make的结构体有没有听过？
+见product.mk
+    86 define dump-product
+    87 $(info ==== $(1) ====)\
+    88 $(foreach v,$(\_product_var_list),\
+    89 $(info PRODUCTS.$(1).$(v) := $(PRODUCTS.$(1).$(v))))\
+    90 $(info --------)
+    91 endef
+$(1)就是$1
+
+product_config.mk
+$(call import-products, vendor/cyanogen/products/cyanogen_$(CM_BUILD).mk)
+
+product.mk
+127 define import-products
+128 $(call import-nodes,PRODUCTS,$(1),$(\_product_var_list))
+129 endef
+
+
+## TARGET_ARCH_VARIANT
+    combo/TARGET_linux-arm.mk:37:TARGET_ARCH_SPECIFIC_MAKEFILE := $(BUILD_COMBOS)/arch/$(TARGET_ARCH)/$(TARGET_ARCH_VARIANT).mk
+arm-v5te.mk
+    ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+    ARCH_ARM_HAVE_FAST_INTERWORKING := true
+    ...
+    arch_variant_cflags := \
+    -march=armv5te \
+    -mtune=xscale  \
+    -D__ARM_ARCH_5__ \
+    -D__ARM_ARCH_5T__ \
+    -D__ARM_ARCH_5E__ \
+    -D__ARM_ARCH_5TE__
