@@ -111,3 +111,29 @@ embed c在函数中定义。那个例子调用了printk，使用dmesg可以看�
     %}
 THIS->\__retvalue代表返回值，THIS->val指向参数。
 
+
+    function access_task_struct (pid:long) %{
+    	struct task_struct *head;
+    	struct task_struct *cur;
+    	int i;
+    	head = &init_task;
+    	printk("search pid:%lld\n", THIS->pid);
+    	cur = head;
+    	do {
+    		if (cur->pid == THIS->pid) {
+    			printk("pid %d: name %s\n", cur->pid, cur->comm);
+    			break;
+    		}
+    		cur = next_task(cur);
+    	} while (cur != head);
+    %}
+
+    probe begin {
+    	access_task_struct($1)
+    	exit()
+    }
+#debug
+stap -p NUM 会中断在systemTap的处理相应阶段。
+-p NUM     stop after pass NUM 1-5, instead of 5
+                 (parse, elaborate, translate, compile, run)
+会显示转换的c代码
