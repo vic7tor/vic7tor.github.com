@@ -6,6 +6,8 @@ category:
 tags: []
 ---
 {% include JB/setup %}
+#0.man pages
+man pages有更详细的信息
 #1.安装
 archlinux下要重新编译内核。使用abs吧，配置好后重新编译。wiki上有说明。其它发行版有debug版的内核。
 menuconfig
@@ -16,9 +18,9 @@ systemtap源代码目录中有个vim目录。
 #3.stapdev组
 把用户添加到stapdev组，这个用户就能使用stap运行systemTap脚本。
 #4.运行
-    stap -e 'begin {print("hello")}'
+    stap -e 'probe begin {print("hello")}'
     stap begin.stp
-    stap -l 'kernel.function(\*)' 显示所有匹配项。
+    stap -l 'kernel.function(*)' 显示所有匹配项。(这一句已经不行了，要用：stap -l 'kernel.function("*")'才行了。
 #5.systemTap脚本
 probe的定位，使用了debug info中的信息来确定像kernel.function("vfs_read")在内核中的具体位置。
 有着awk一般的格式：
@@ -104,6 +106,7 @@ embed c在函数中定义。那个例子调用了printk，使用dmesg可以看�
 对于%{ %}包含的代码，会直接扩展为c代码。stap -v会显示出生成了一个c语言源文件，（_systemtap就是对kprobe的包装_,生成的c代码，就是一个kprobe模块），在c语言代码中可以看到。这个c语言代码中出现了#include "runtime.h"，runtime.h在/usr/share/systemtap/runtime/下，这个文件包含了内核的一些常用头文件，像linux/kernel.h，%{ %}中的c代码得已正常编译。
 #Embedded C _functions_
     function <name>:<type>(<arg1>:<type>, ...) %{ <C_stmts> %}
+0.对于函数定义括号是需要的
 1.使用kread()宏来dereference(读取数据吧)任何有可能是无效或危险指针。
 2.访问输入输出变量使用THIS
     function add_one (val:long) %{
@@ -127,13 +130,51 @@ THIS->\__retvalue代表返回值，THIS->val指向参数。
     		cur = next_task(cur);
     	} while (cur != head);
     %}
-
     probe begin {
     	access_task_struct($1)
     	exit()
     }
+3.想要包含c的头文件
+    %{
+    #include \<linux/tty_driver.h\>
+    %}
+
 #debug
 stap -p NUM 会中断在systemTap的处理相应阶段。
 -p NUM     stop after pass NUM 1-5, instead of 5
                  (parse, elaborate, translate, compile, run)
 会显示转换的c代码
+
+#problem
+运行stap时说，Checking "/lib/modules/3.3.8-1-ARCH/build/.config" failed with error: No such file or directory。在archlinux上就是linux-headers-3.3.8-1-x86_64.pkg.tar.xz这个包没有安装。
+#小技巧
+##1.引用target变量时，将指针转换为string使用kernel_string函数
+probe kernel.function("pty_write@drivers/tty/pty.c:113") {
+        printf("%s:call pty_write\n", execname());
+        printf("\t %d data:%s\n", $c, kernel_string($buf));
+}
+##2.systemTap有引用内核源文件出现的任何符号（全局的）的能力
+1.函数
+stap -L 'kernel.function("*")'会列出内核中所有的函数。像file_operations这样的结构初始化时使用的那些函数。像上一个例子中pty_write是static const struct tty_operations pty_unix98_ops;中的那个。
+2.任意变量
+就是下面那个例子，自己的systemTap是1.7版的，也不知道现在多少版本号了。那个@var的方试报错。还有好像systemTap做了一下大的变化。就下面这个例子前面下的那个文档里根本没有说，就是那个SystemTap_Beginners_Guide，似乎要再看下才行了，现在好像比以前多了很多功能。刚才在官网看到了，systemTap1.8出来了，这个guide也根据1.8的变化做了些改动。在lwn.net上看到SystemTap1.8是在6月17发布的，@var的确是1.8新增的。1.8在学校下了才能用得到了。。
+probe kernel.function("vfs_read") {
+        printf("current files_stat max_file:%d\n",
+                @var("files_stat@fs/file_table.c")->max_file);
+        exit();
+}
+#fuction::*
+这个man pages里没有，只有到SystemTap的官网去看了。
+比方说今天用到的fuction::print_backtrace()--显示调用堆栈。
+那个exit函数 execname都在function::\*之中
+#module
+stap -l 'module("\*")是没有反应的stap -l 'module("usbcore").function("\*")'才会有反应，不指定模块是不行的。
+
+下面程序查看了以模块形式加载的usbcore模块中的usb_bus_notify的调用堆栈。
+
+    probe module("usbcore").function("usb_bus_notify") {
+    	print_backtrace();
+    	exit();
+    }
+
+
