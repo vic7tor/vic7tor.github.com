@@ -50,8 +50,10 @@ type:TTY_DRIVER_TYPE_SYSTEM(略了，以后补）。。
 init_termios = tty_std_termios;这个一般的tty驱动就这样子了。
 type、subtype、flags均定义在<linux/tty_driver.h>在这个文件最后可以找到。
 flags是几个的与。
+如果TTY_DRIVER_DYNAMIC_DEV没有设置，tty_register_driver时，会调用tty_register_device
 #tty_register_device
 用systemTap试了下，tty_register_device((struct tty_driver *)0xffff880039da2c00, 20, NULL);，调用了这个函数，当然参数指针都是正确的。这个函数干的事就是调用device_create。在调用这个函数后，在/sys/class/tty/下生成了对应的ttyS20目录，然后，/dev下了有了ttyS20。就是这么个情况。
 
 /dev/ttyN那些是这个驱动：drivers/tty/vt/vt.c
+include/linux/kbd_kern.h 通过这个读键盘数据？
 #tty_operations
