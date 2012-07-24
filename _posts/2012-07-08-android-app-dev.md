@@ -23,30 +23,33 @@ Intent还有别的方式来启动另一个Activity，包括另一个程序中的
 #Widget与View
 View类是Android基本的用户界面构建模块，它代表屏幕的一个矩形区域。View类是几乎所有Widget与布局的基类。
 #按钮与事件
-`Button basic_button = (Button) findViewById(R.id.basic_button);
-basic_button.setOnClickListener(new View.OnClickListener() {
-	public void onClick(View v) {
-	 Toast.makeText(Buttons.this, 
-	 }
-}`
+
+    Button basic_button = (Button) findViewById(R.id.basic_button);
+    basic_button.setOnClickListener(new View.OnClickListener() {
+    	public void onClick(View v) {
+    	 Toast.makeText(Buttons.this, 
+    	 }
+    }
+
 要想在某个按钮按下时处理单击事件，首先需要通过资源标识符获得它的引用。下一步，调用setOnClickListener方法，这需要一个有效的View.OnClickListener类的实例，提供该实例的一种简单的方法是在方法调用中定义一个。这需要实现onClick()方法。
 #listview
 listview自定义Adapter
-`public class myadapter extends BaseAdapter {
-	LayoutInflater mInflater;
-	public view getView(int position, View convertView, ViewGroup parent) {
-	mInflater = LayoutInflater.form(context);
-	convertView = mInflater.inflate(R.layout.myitem, null);
-	TextView tv = (TextView) convertView.findViewById(R.id.xx);
-	tv.setText("test);
-	return convertView;
-}
 
-public int getCount()
-{
-
-}
-}
-
-listview.seAdapter(new myadapter());`
+    public class myadapter extends BaseAdapter {
+    	LayoutInflater mInflater;
+    	public view getView(int position, View convertView, ViewGroup parent) {
+    	mInflater = LayoutInflater.form(context);
+    	convertView = mInflater.inflate(R.layout.myitem, null);
+    	TextView tv = (TextView) convertView.findViewById(R.id.xx);
+    	tv.setText("test);
+    	return convertView;
+    }
+    
+    public int getCount()
+    {
+    
+    }
+    }
+    
+    listview.seAdapter(new myadapter());
 

@@ -9,7 +9,8 @@ tags: []
 #0.
 功能
 #1.内核配置
-General setup/Profiling support 
-		OProfile system profiling
+
+    General setup/Profiling support 
+                  OProfile system profiling
 #2.用户态程序
 

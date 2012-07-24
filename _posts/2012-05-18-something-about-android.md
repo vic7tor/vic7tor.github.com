@@ -7,11 +7,13 @@ tags: [android]
 ---
 {% include JB/setup %}
 #1.编译Native代码
+
     . build/envsetup.sh
     lunch
     mmm \*/\*/ - (你程序的代码)
 #2.编译静态的可执行程序
 在Android.mk加入下面代码:
+
     LOCAL_STATIC_LIBRARIES := libc
     LOCAL_FORCE_STATIC_EXECUTABLE := true
 为什么会有*LOCAL_STATIC_LIBRARIES := libc*,因为我写的那个程序调用了*fork*。在android中，*fork*是在bionic的libc中实现的，因为，程序是静态链接，所以要使用*LOCAL_STATIC_LIBRARIES*声明要链接的静态库，否刚会出现链接错误。

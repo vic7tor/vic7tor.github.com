@@ -20,7 +20,7 @@ Edify Functions and Expressions
 
 Discovering the function names is relatively easy. In the root of the Android platform source-code tree do:
 
-grep -rn  RegisterFunction\(\"  bootable/recovery/* device/* 2>/dev/null | sed -n 's/^.\*RegisterFunction("\(.\*\)",.\*$/\1/p' | sort
+`grep -rn  RegisterFunction\(\"  bootable/recovery/* device/* 2>/dev/null | sed -n 's/^.\*RegisterFunction("\(.\*\)",.\*$/\1/p' | sort`
 Which results in:
 
 abort
@@ -69,9 +69,9 @@ Discovering their arguments and what they do (function names are hopefully descr
 Updater Function Descriptions
 
 function	 arguments	 implemented by	 source-file
-abort	 (\[msg])	 AbortFn	 bootable/recovery/edify/expr.c
-apply_patch	 (source_filename, target_filename, target_sha1, target_size, sha1, patch, [[sha1, patch], ...])	 ApplyPatchFn	 bootable/recovery/updater/install.c
-apply_patch_check	 (file [[, sha1], ...] )	 ApplyPatchCheckFn	 bootable/recovery/updater/install.c
+abort	 (`[msg]`)	 AbortFn	 bootable/recovery/edify/expr.c
+apply_patch	 (source_filename, target_filename, target_sha1, target_size, sha1, patch, `[[sha1, patch], ...]`)	 ApplyPatchFn	 bootable/recovery/updater/install.c
+apply_patch_check	 (file `[[, sha1], ...]` )	 ApplyPatchCheckFn	 bootable/recovery/updater/install.c
 apply_patch_space		 ApplyPatchSpaceFn	 bootable/recovery/updater/install.c
 assert		 AssertFn	 bootable/recovery/edify/expr.c
 backup_rom		 BackupFn	 bootable/recovery/edifyscripting.c

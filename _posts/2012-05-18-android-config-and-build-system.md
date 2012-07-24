@@ -9,11 +9,12 @@ tags: [android]
 
 # config -- build/envsetup.sh
 ## lunch command can choose
-build/envsetup.sh:breakfast()->vendor/cyanogen/vendorsetup.sh->build/envsetup.sh:add_lunch_combo()
+`build/envsetup.sh:breakfast()->vendor/cyanogen/vendorsetup.sh->build/envsetup.sh:add_lunch_combo()`
 ## how device/motorola/jordan/vendorsetup.sh be included
 in build/envsetup.sh
-        1599 # Execute the contents of any vendorsetup.sh files we can find.
-        1600 for f in \`{ setopt nullglob; /bin/ls vendor/\*/vendorsetup.sh vendor/\*/build     /vendorsetup.sh device/\*/\*/vendorsetup.sh; } 2> /dev/null\`
+
+    1599 # Execute the contents of any vendorsetup.sh files we can find.
+    1600 for f in { setopt nullglob; /bin/ls vendor/\*/vendorsetup.sh vendor/\*/build     /vendorsetup.sh device/\*/\*/vendorsetup.sh; } 2> /dev/null
 ## envsetup.sh function
 To setup env var like:
     PLATFORM_VERSION_CODENAME=REL
@@ -34,6 +35,7 @@ To setup env var like:
 command mka invoke *make* infact
 Makefile at top dir of source code only has one line: include build/core/main.mk
 ## how Android.mk work
+
     else # ONE_SHOT_MAKEFILE
     \#
     \# Include all of the makefiles in the system
@@ -60,6 +62,7 @@ AndroidBoard.mk Boardconfig.mk use grep in build/core
 ## TARGET_ARCH_VARIANT是怎么来的
 在envsetup.sh中lunch()最后的函数会调用build/core/config.mk
 在config.mk中
+
 	129 board_config_mk := \
 	130         $(strip $(wildcard \
 	131                 $(SRC_TARGET_DIR)/board/$(TARGET_DEVICE)/BoardConfig.mk \
@@ -71,10 +74,12 @@ AndroidBoard.mk Boardconfig.mk use grep in build/core
 ##上节上TARGET_DEVICE是怎么来的
 config.mk包含了envsetup.mk, envsetup.mk包含了product_config.mk。
 product_config.mk中:
-INTERNAL_PRODUCT := $(call resolve-short-product-name, $(TARGET_PRODUCT))
-TARGET_DEVICE := $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_DEVICE)
+
+    INTERNAL_PRODUCT := $(call resolve-short-product-name, $(TARGET_PRODUCT))
+    TARGET_DEVICE := $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_DEVICE)
 神奇的PRODUCTS.xx.PRODUCT_DEVICE是什么东东？make的结构体有没有听过？
 见product.mk
+
     86 define dump-product
     87 $(info ==== $(1) ====)\
     88 $(foreach v,$(\_product_var_list),\
@@ -84,17 +89,21 @@ TARGET_DEVICE := $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_DEVICE)
 $(1)就是$1
 
 product_config.mk
-$(call import-products, vendor/cyanogen/products/cyanogen_$(CM_BUILD).mk)
+
+    $(call import-products, vendor/cyanogen/products/cyanogen_$(CM_BUILD).mk)
 
 product.mk
-127 define import-products
-128 $(call import-nodes,PRODUCTS,$(1),$(\_product_var_list))
-129 endef
+
+    127 define import-products
+    128 $(call import-nodes,PRODUCTS,$(1),$(\_product_var_list))
+    129 endef
 
 
 ## TARGET_ARCH_VARIANT
+
     combo/TARGET_linux-arm.mk:37:TARGET_ARCH_SPECIFIC_MAKEFILE := $(BUILD_COMBOS)/arch/$(TARGET_ARCH)/$(TARGET_ARCH_VARIANT).mk
 arm-v5te.mk
+
     ARCH_ARM_HAVE_THUMB_SUPPORT     := true
     ARCH_ARM_HAVE_FAST_INTERWORKING := true
     ...

@@ -64,22 +64,25 @@ modalias文件包含相应信息。
 ##磁盘
 ###USB存储设备
 1.USB存储设备实际是通过USB接口通信的USB SCSI设备。因此，必须首先启用SCSI子系统。
-`Device Drivers
+
+    Device Drivers
 	SCSI Device Support
-		[*]SCSI Devices Support`
+		[*]SCSI Devices Support
 2.同样，在SCSI系统中，为了使设备能够正常挂载，必须启用"SCSI disk support"。
 ###IDE磁盘
-lspci | grep IDE
+`lspci | grep IDE`
 SCSI Devices Suppo2.同样，在SCSI系统中，为了使设备能够正常挂载，必须启用"SCSI disk support"。
 ###IDE磁盘
-lspci | grep IDE
+`lspci | grep IDE`
 1.在内核中启用PCI支持。
-`BUS options (PCI,PCMCIA,EISA,MCA,ISA)
-	[*] PCI Support`
+
+    BUS options (PCI,PCMCIA,EISA,MCA,ISA)
+	[*] PCI Support
 2.启用IDE子系统和IDE支持
-`Device Drivers
+
+    Device Drivers
 	[*] ATA/ATAPI/MFM/RLL support
-	[*] Enhanced IDE/MFM RLL disk/cdrom/tape/floppy support`
+	[*] Enhanced IDE/MFM RLL disk/cdrom/tape/floppy support
 3.在ATA系统中，必须启用特定类型的IDE控制器支持才能使之正常工作。为了在你选错磁盘控制
 
 
