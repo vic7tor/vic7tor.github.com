@@ -40,6 +40,31 @@ module JB
   end #Path
 end #JB
 
+# Usage: rake search [post title]
+
+desc "Search post title in #{CONFIG['posts']} & opend it"
+task :search do
+	dir = CONFIG['posts']
+	puts "please input expresion for title:"
+	exp = STDIN.gets.chop
+	re = Regexp.new(exp)
+	i = 0
+	matchfile = []
+	Dir::foreach(dir) { |file|
+		if (file =~ re) != nil
+			matchfile.insert(i, file)
+			puts i.to_s + ":" + file
+			i = i + 1
+		end
+	}
+	puts "please the index of your choice:"
+	choice = (STDIN.gets.chop).to_i
+	if choice == -1
+		exit
+	end
+	system "vim #{dir}/#{matchfile[choice]}"
+end
+
 # Usage: rake post title="A Title" [date="2012-02-09"]
 desc "Begin a new post in #{CONFIG['posts']}"
 task :post do
