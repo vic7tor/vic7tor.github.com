@@ -10,6 +10,7 @@ tags: []
 就是那个从用户态通过cdev到达tty核心，再通过tty ldisc，再到tty_driver那个。。
 
 #tty_driver
+linux/tty_driver.h
 
     struct tty_driver {
             int     magic;          /* magic number for this structure */
@@ -52,6 +53,8 @@ init_termios = tty_std_termios;这个一般的tty驱动就这样子了。
 type、subtype、flags均定义在`<linux/tty_driver.h>`在这个文件最后可以找到。
 flags是几个的与。
 如果TTY_DRIVER_DYNAMIC_DEV没有设置，tty_register_driver时，会调用tty_register_device
+#alloc_tty_driver
+
 #tty_register_device
 用systemTap试了下，`tty_register_device((struct tty_driver *)0xffff880039da2c00, 20, NULL);`，调用了这个函数，当然参数指针都是正确的。这个函数干的事就是调用device_create。在调用这个函数后，在/sys/class/tty/下生成了对应的ttyS20目录，然后，/dev下了有了ttyS20。就是这么个情况。
 
