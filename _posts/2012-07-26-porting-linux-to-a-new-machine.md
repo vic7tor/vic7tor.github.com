@@ -71,6 +71,8 @@ LATCH表示时钟计数器的寄存器应该设的值
 上面那个公式就相当于LATCH = (CLOCK_TICK_RATE/HZ + 1/2)
 CLOCK_TICK_RATE是一秒钟多少次。每次时钟中断把HZ加1。LATCH就是HZ增加1，时钟计数器的输入振荡了多少下。
 
+这个东西不知道还有什么用，由于输入定时器的时钟为PCLK而且还要被分频。LATCH是不能设为定时器的值的。CLOCK_TICK_RATE不知道还有没有别的意义。
+
 ##2.3 include/mach/vmalloc.h
 内容为：
 
@@ -213,7 +215,7 @@ irq_desc在desc_set_defaults做一些初始化。irqnr存在`irq_desc->irq_data.
 就是设备驱动使用`request_irq`会注册一个`irq_action`。
 
 ### 3.3.3 `init_irq`
-	
+
 	void xxx(struct irq_data *data)
 	{
             data.irq irq号
@@ -258,7 +260,7 @@ irq_desc在desc_set_defaults做一些初始化。irqnr存在`irq_desc->irq_data.
 
     void s3c2440_timer_init(void)
     {
-        s3c2440_timer_init();
+        s3c2440_timer_setup();
 	setup_irq(IRQ_TIMER4, &s3c2440_timer_irq);
     }
 
@@ -271,7 +273,7 @@ irq_desc在desc_set_defaults做一些初始化。irqnr存在`irq_desc->irq_data.
 ##3.5 init_machine
 
 ##3.6 init_early
-在setup_arch的最后调用了init_early。setup_arch在(后面几个按顺序在start_kernel中调用)init_IRQ(machine_desc->init_IRQ)、time_init(machine_desc->timer)、console_init。
+在setup_arch的最后调用了init_early。setup_arch在(后面几个按顺序在start_kernel中调用)init_IRQ(`machine_desc->init_IRQ`)、time_init(`machine_desc->timer`)、console_init。
 do_initcall是在后面后面创建一个内核线程才运行的。init_machine就在arch_initcall调用。
 
 #4 clock
