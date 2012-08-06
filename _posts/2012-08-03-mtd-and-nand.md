@@ -105,7 +105,7 @@ bbt的以后用stap跟踪吧，现在能找了。
 	chip->ecc.correct
 	chip->ecc.mode
 	chip->ecc.hwctl - 在读写之前调用的，初始化ECC，S3C2440的NFCONT有一位。
-
+	chip->ecc.size - 如果是HW ECC的话，这个是需要设置的，SOFT不需要，在nand_scan_tail中被设置了。如果是HW ECC layout还是用内核提供的吧。
 	chip->options - BUSWIDTH的需要设置，nand_scan_ident需要用到
 
 s3c2410驱动上说的u-boot bbt什么的。
