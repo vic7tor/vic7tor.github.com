@@ -156,10 +156,11 @@ embed c在函数中定义。那个例子调用了printk，使用dmesg可以看�
 
 3.想要包含c的头文件
 
+%{ highlight c }%
     %{
-    #include \<linux/tty_driver.h\>
+    #include <linux/tty_driver.h>
     %}
-
+%{ highlight }%
 #debug
 stap -p NUM 会中断在systemTap的处理相应阶段。
 -p NUM     stop after pass NUM 1-5, instead of 5
