@@ -20,7 +20,7 @@ tags: []
     *(unsigned int *)((0x50000000 + 0x4000 * 0) + 0x23) = ch;
 }
 
-{% highlight %}
+{% endhighlight %}
 
 while语句那个表达式，是那样的，忘记用ioread这样的函数了。while语句这个表达值为1，是个死循环。
 

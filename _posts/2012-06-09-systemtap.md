@@ -160,7 +160,7 @@ embed c在函数中定义。那个例子调用了printk，使用dmesg可以看�
     %{
     #include <linux/tty_driver.h>
     %}
-%{ highlight }%
+%{ endhighlight }%
 #debug
 stap -p NUM 会中断在systemTap的处理相应阶段。
 -p NUM     stop after pass NUM 1-5, instead of 5
