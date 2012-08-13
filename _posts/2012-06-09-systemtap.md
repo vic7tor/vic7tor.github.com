@@ -76,9 +76,11 @@ $$vars $$loacls $$parms $$return都代表一个字符串。
 ###Typecasting
 In most cases SystemTap can determine a variables's type form the debug information.
 ###Checking Target Variable Availablility
-@defined用来测试一个target variable是否可用。不同的内核版本，target variable可能存在，可能不存在。
+`@defined`用来测试一个target variable是否可用。不同的内核版本，target variable可能存在，可能不存在。
 ##Command-Line Arguments
-$整数与@字符串
+
+`$`整数与`@`字符串
+
 commandlineargs.stp:
 
     probe kernel.function(@1) { }
@@ -188,7 +190,7 @@ probe kernel.function("pty_write@drivers/tty/pty.c:113") {
         exit();
     }
 
-#fuction::*
+#`fuction::*`
 这个man pages里没有，只有到SystemTap的官网去看了。
 比方说今天用到的fuction::print_backtrace()--显示调用堆栈。
 那个exit函数 execname都在`function::*`之中

@@ -33,7 +33,7 @@ To setup env var like:
 
 # build 
 command mka invoke *make* infact
-Makefile at top dir of source code only has one line: include build/core/main.mk
+Makefile at top dir of source code only has one line: `include build/core/main.mk`
 ## how Android.mk work
 
     else # ONE_SHOT_MAKEFILE
@@ -50,7 +50,8 @@ Makefile at top dir of source code only has one line: include build/core/main.mk
 ## include $(BUILD_STATIC_LIBRARY)
     config.mk:57:BUILD_STATIC_LIBRARY:= $(BUILD_SYSTEM)/static_library.mk
     raw_static_library.mk:4:include $(BUILD_STATIC_LIBRARY)
-## main.mk include some *.mk files
+## main.mk
+`main.mk include some *.mk files`
 AndroidBoard.mk Boardconfig.mk use grep in build/core
 
 # envsetup.sh配置系统导出的环境变量的作用
