@@ -28,7 +28,7 @@ watchdog_timeo - watchdog超时，为多少jiffies。超时时调用tx_timeout�
 
 下面这个函数已经封装在了net_device_ops，并加了前缀`ndo_`，netdev_ops成员。
 
-open、stop - 初始化和关闭网卡。ifconfig up down。open申请网卡中断、DMA、IO端口等资源。
+open、stop - 初始化和关闭网卡。ifconfig up down。open申请网卡中断、DMA、IO端口等资源。还有调用netif_start_queue、netif_stop_queue打开关闭传送队列。
 
 hard_start_xmit - 发送数据，从释放sk_buf。
 
@@ -63,6 +63,8 @@ ifconfig up down会调用open、close函数，在open函数中启用中断之类
 这个读的驱动，看不同的，有各种不同的写法。
 
 skb_reserve(skb, NET_IP_ALIGN);
+
+这个要明白那个skb_buf.length先吧
 
 #6.发送分组
 网卡忙时，start_xmit函数返回NETDEV_TX_BUSY不处理这个sk_buf。发送成功后释放sk_buf并返回NETDEV_TX_OK。成功后注意统计net_device.stats。

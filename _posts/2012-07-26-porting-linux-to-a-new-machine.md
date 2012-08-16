@@ -95,6 +95,8 @@ CLOCK_TICK_RATE是一秒钟多少次。每次时钟中断把HZ加1。LATCH就是
 内容为：
 
     #define NR_IRQS 60
+    还有代表一个中断的request_irq函数使用的宏
+    为避免get_irqnr_preamble的Z标志位问题，可以使用第一个IRQ从不从0开始定义，因为这个IRQ编号类似数组索引(那个radix tree能不能从零开始，NR_IRQS就要是最大的IRQ编号加1(包括了开始处那些)。
 
 ##2.6 include/mach/entry-macro.S
     在这个文件中需要实现get_irqnr_preamble和get_irqnr_and_base和disable_fiq(entry-armv.S调用)、arch_ret_to_user(entry-common.S调用)
@@ -106,6 +108,8 @@ CLOCK_TICK_RATE是一秒钟多少次。每次时钟中断把HZ加1。LATCH就是
     base 为irq控制器的基址，只传给后面调用的get_irqnr_and_base
         引用这个寄存器前面加\：ldr     \base, =VA_VIC0
     tmp 你可以使用的一个临时寄存器
+    这个宏返回时还要清除Z位，见arch_irq_handler_default后面几条指令。
+    关于arch_irq_handler_default还要处理一个问题。见后面arch_irq_handler_default代码。这个问题是，当asm_do_IRQ返回时，因为"adrne   lr, BSYM(1b)"会回到get_irqnr_preamble，再检测一下是否有中断。真有中断的话继续处理。因为get_irqnr_preamble写法失误，引起了一个bug。见bugs fix那篇文章。
     .endm
 
     .macro arch_ret_to_user, tmp1, tmp2
@@ -119,6 +123,19 @@ CLOCK_TICK_RATE是一秒钟多少次。每次时钟中断把HZ加1。LATCH就是
     .endm
 
     irq_handler->arch_irq_handler_default->(get_irqnr_preamble,get_irqnr_and_base)
+
+arch_irq_handler_default
+
+    .macro  arch_irq_handler_default
+    get_irqnr_preamble r6, lr
+    1:      get_irqnr_and_base r0, r2, r6, lr
+    movne   r1, sp
+    @
+    @ routine called with r0 = irq number, r1 = struct pt_regs *
+    @
+    adrne   lr, BSYM(1b)
+    bne     asm_do_IRQ
+
 
 ##2.7 include/mach/system.h
 这个文件需要实现arch_reset和arch_idlea
@@ -158,6 +175,17 @@ void flush(void) 刷新。。
 
 setup_machine_tags传入MACHINE_ID然后返回对应的machine_desc。
 map_io、init_irq、timer、init_machine(按顺序被执行)，这些都通过MACHINE_START机制被调用，没有强制需要在什么文件中实现。
+
+machine_desc中几个初始化成员执行顺序：
+
+start_kernel:
+
+    1.setup_arch-->paging_init-->devicemaps_init-->mdesc->map_io
+    2.          -->mdesc->init_early
+    3.init_IRQ-->machine_desc->init_irq()
+    4.timer_init-->system_timer->init
+
+vectors是在devicemaps_init中定义的，这里还映射了些别的东西。
 
 ##3.2 map_io
 	

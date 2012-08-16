@@ -42,6 +42,14 @@ name - console的名字内核使用的console参数用到这个吧
 
     console_initcall调用register_console /* <linux/init.h>
 
+console的write函数要用使用uart_console_write要么在自己代码中做如下转换：
+
+                if (*s == '\n')
+                        putchar(port, '\r');
+                putchar(port, *s);
+
+这个代码会把'\n'弄成'\r''\n'
+
 #2. uart driver
 `<linux\serial_core.h>`
 ##1.uart_driver

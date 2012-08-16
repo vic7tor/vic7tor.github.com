@@ -41,3 +41,47 @@ objdump -d misc.o发现，这里面只有三个函数：`error`、`__div0`、`de
 这个函数是在early_init中执行的。这个时候，还没有调用map_init，访问那个寄存器地址后就会出错。
 
 log_buf是printk输出的地方，在还没有console的时候，可以通过gdb来查看这个。不过要先在gdb中`set print elements 0`才能显示出所有的内容。开了后，就可以使用`p log_buf`命令来显示printk的输出了。
+
+#3.iotable_init错误
+1.virtual要在VMALLOC区之外
+
+2.virtual与物理地址写反了(郁闷，这种错也犯)
+
+#4.时钟设置问题
+1.`^`运算行不是求幂，而是按位异或。2的多少次幂就是1左移多少位。一个数乘以2的多少次幂就是这个数左移多少位。
+
+2.m=MDIV+8; p=PDIV+2;s=SDIV。直接把MDIV、PDIV、SDIV代入公式，算的频率是错的。
+
+#5.svc_preempt代码出错，与反汇编的不匹配
+这个问题在我make clean然后再make后变得正常了。想想有两个原因。
+
+1.真的问题，重新干净地编译下就正常了
+
+2.tftp uImage下的是原来，新编译的没有拷过去。反汇编的是新的，gdb调试的时候用的新的符号，符号代表的地址，新的内核与旧的不一样。所以就会不同。
+
+#6.get_irqnr_and_base未设置标志问题
+
+    .macro  arch_irq_handler_default
+    get_irqnr_preamble r6, lr
+    1:      get_irqnr_and_base r0, r2, r6, lr
+    movne   r1, sp
+    @
+    @ routine called with r0 = irq number, r1 = struct pt_regs *
+    @
+    adrne   lr, BSYM(1b)
+    bne     asm_do_IRQ
+
+在`get_irqnr_and_base`后几条指令都是ne结尾，当有中断时，get_irqnr_and_base要清除Z标志。
+
+为什么前几个中断能处理呢？应该是前面几个中断发生时，cpu没有Z标志，cpu标志是共用的吧，当Z位被设置时，那个就不能被处理了。
+
+#在__svc_irq中无法返回
+看arch_irq_handler_default的代码，上面就有。有一句`adrne lr, BSYM(1b)`，lr就在get_irqnr_and_base那一句，asm_do_IRQ返回时，会跳到get_irqnr_and_base，再次，检测是否有中断。而这个写法：
+
+        .macro get_irqnr_and_base, irqnr, irqstat, base, tmp
+                ldr \irqnr, [\base, #INTOFFSET]
+                tst \base, \base        @clear Z flag
+        .endm
+
+刚处理完，没有中断，此时也会INTOFFSET为0。但是还是设置了Z标志位。会让asm_do_IRQ运行，等asm_do_IRQ运行完，时钟中断也好了，然后就无限循环。
+
