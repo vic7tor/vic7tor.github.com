@@ -207,7 +207,20 @@ vectors是在devicemaps_init中定义的，这里还映射了些别的东西。
 ##3.3 `init_irq`
 ###3.3.1 中断处理机制
 代码会变动。基本还是一样。主要有三种数据结构参与进来。跟踪`asm_do_IRQ`你就会发现这些。
-要禁止一个中断，看handle_xxx_irq的代码(irqd_irq_disabled) ，似乎只能使用irq_disable
+
+要禁止一个中断，看handle_xxx_irq的代码(irqd_irq_disabled) ，似乎只能使用irq_disable。irq_disable是没有导出的，能用的有enable_irq与disable_irq这对函数，irq_desc的depth就是供这两个函数使用，来确定enable的调用与disable的调用是否匹配。它们最终调用irq_enable、irq_disable，最终调用chip.irq_unmask、chip.irq_disable。需要实现。irq_desc.depth默认值是1。系统默认所有中断都是被禁止的，所以，要先enable_irq后才启用了中断。
+
+关于enable_irq与disable_irq还有一个问题。request_irq可能会调用irq_startup。这个要看irq_desc有没有设置过标志。
+
+在request_irq调用的__setup_irq:
+
+                if (irq_settings_can_autoenable(desc))
+                        irq_startup(desc);
+                else
+                        /* Undo nested disables: */
+                        desc->depth = 1;
+
+
 1. `irq_desc`
 这个是最基本的结构，有一个机制将`irq_desc`与irq号对应起来(`get_irqnr_base`)，得到irq号后使用`irq_to_desc`取得irq号对应的`irq_desc`。`irq_desc`是`early_irq_init`生成的。`irq_desc`指向`irq_chip`(`irq_data`中)和`irq_action`(`request_irq`函数使用那个)。
 irq_desc在desc_set_defaults做一些初始化。irqnr存在`irq_desc->irq_data.irq`
@@ -243,6 +256,7 @@ irq_desc在desc_set_defaults做一些初始化。irqnr存在`irq_desc->irq_data.
 就是设备驱动使用`request_irq`会注册一个`irq_action`。
 
 ### 3.3.3 `init_irq`
+记得要set_irq_flags这个irq才能被request_irq申请。
 
 	void xxx(struct irq_data *data)
 	{
@@ -257,7 +271,7 @@ irq_desc在desc_set_defaults做一些初始化。irqnr存在`irq_desc->irq_data.
 	};
 	
 	irq_set_chip_and_handler(irqnr, &xxx_chip, handle_edge_irq);
-	
+	set_irq_flags(irqnr, IRQF_VALID);
 	/* 对于sub int它们也需要一个chip来mask unmask(SUBINTMSK寄存器)和
 			ack(SUBSRCPND) 视demux的实现情况，可能在这个chip
 			的mask unmask ack处理INTMSK INTPND SRCPND等寄存器

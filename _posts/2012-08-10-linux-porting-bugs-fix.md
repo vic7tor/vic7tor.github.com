@@ -75,7 +75,7 @@ log_buf是printk输出的地方，在还没有console的时候，可以通过gdb
 
 为什么前几个中断能处理呢？应该是前面几个中断发生时，cpu没有Z标志，cpu标志是共用的吧，当Z位被设置时，那个就不能被处理了。
 
-#在__svc_irq中无法返回
+#7.在__svc_irq中无法返回
 看arch_irq_handler_default的代码，上面就有。有一句`adrne lr, BSYM(1b)`，lr就在get_irqnr_and_base那一句，asm_do_IRQ返回时，会跳到get_irqnr_and_base，再次，检测是否有中断。而这个写法：
 
         .macro get_irqnr_and_base, irqnr, irqstat, base, tmp
@@ -84,4 +84,8 @@ log_buf是printk输出的地方，在还没有console的时候，可以通过gdb
         .endm
 
 刚处理完，没有中断，此时也会INTOFFSET为0。但是还是设置了Z标志位。会让asm_do_IRQ运行，等asm_do_IRQ运行完，时钟中断也好了，然后就无限循环。
+
+#8.s3c2440_uart_driver_init
+注册uart_driver后，在错误处理代码前面没有加return，代码执行行到uart_unregister_driver又把uart_driver注销了，所以那个kgdboc找不到tty_driver...
+
 

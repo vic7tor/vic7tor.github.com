@@ -96,7 +96,7 @@ stop_tx - uart_stop调用，uart_stop为tty_operations的成员。s3c2440的驱�
 
 stop_rx - 在uart_close中被调用。
 
-没有start_rx - uart_insert_char在rx处理函数中向tty核心发送数据。这么看来，这设计适合用中断来处理。uart_handle_sysrq_char处理特别字符。
+没有start_rx - uart_insert_char在rx处理函数中向tty核心发送数据。这么看来，这设计适合用中断来处理。怎么rx见后面大节。
 
 start_tx的处理(如用中断处理，则在中断中):
 
@@ -137,3 +137,45 @@ c_cflag中的:
 自动流控
 ###5. config_port
 用来初始化UCON了
+
+#3.uart rx与sysrq
+更多Documentation/sysrq.txt。
+
+sysrq提供的handle_sysrq，在uart中是：uart_handle_sysrq_char
+
+三星的驱动提供了对sysrq的支持。
+
+要及时处理sysrq，对于开启了FIFO的情况，一般FIFO中的数据要达到触发数目才会引发中断，同时对于少量数据，这也是一个问题，所以，要开启UCON的Rx Time out，这样，当过一定时间后，即使，数据数量没有达到触发的数目也会产生中断了。
+
+当port.flags设置UPF_CONS_FLOW，要清空fifo。这个暂时不知道有什么用。
+
+下面是接收流程：
+
+1.port.icount.rx++ 设置标志TTY_NORMAL
+
+2.处理UERSTAT的4种错误：
+
+1)如果是BREAK port.icount.brk++同时调用uart_handle_break，这个函数与uart_handle_sysrq_char联合工作的。同时ignore这个字符，后面的函数不处理。三星驱动设置了TTY_BREAK但是后面没有处理这个字符就不管了，
+
+2)如果是FRAME port.icount.frame++同时，设置TTY_FRAME后面要传给uart_insert_char。
+
+3)如果是OVERRUN port.icount.overrun++同时设置TTY_OVERRUN。
+
+4)如果是PARITY port.icount.parity++同时设置TTY_PARITY。
+
+3.先uart_handle_sysrq_char，如果函数返回真，就ignore这个函数。
+
+4.uart_insert_char uart_insert_char(port, uerstat, S3C2410_UERSTAT_OVERRUN, ch, flag);
+
+flag就是上面的TTY_OVERREN TTY_PARITY TTY_BREAK什么的。
+
+5.退出函数之前tty_flip_buffer_push `struct tty_struct *tty = port->state->port.tty;`
+
+uart_handle_break与uart_handle_sysrq_char是联合工作，看代码就知道。
+
+还有个问题UERSTAT是对FIFO中字符是统一的，还是每个字符都有一个UERSTAT？
+每个字符一个UERSTAT，S3C2440手册里有个图。
+
+还有那个，UERSTAT的错误同时只发生的一个吧。所以，上面操作与三星驱动不一样了。
+
+
