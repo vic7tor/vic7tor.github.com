@@ -28,7 +28,7 @@ watchdog_timeo - watchdog超时，为多少jiffies。超时时调用tx_timeout�
 
 下面这个函数已经封装在了net_device_ops，并加了前缀`ndo_`，netdev_ops成员。
 
-open、stop - 初始化和关闭网卡。ifconfig up down。open申请网卡中断、DMA、IO端口等资源。还有调用netif_start_queue、netif_stop_queue打开关闭传送队列。
+open、stop - 初始化和关闭网卡。ifconfig up down。初始化网卡。open申请网卡中断、DMA、IO端口等资源。还有调用netif_start_queue、netif_stop_queue打开关闭传送队列。
 
 hard_start_xmit - 发送数据，从释放sk_buf。
 
@@ -43,6 +43,8 @@ change_mtu - 以太网设备设为eth_change_mtu。
 set_mac_address - 设置mac地址，可设为eth_mac_addr
 
 validate_addr - 可设为eth_valicate_addr
+
+set_rx_mode - 这个函数被调用时，把mac addr写入到网卡中并开启rx? dump_stack看看
 
 #3.注册网络设备
 1.分配net_device

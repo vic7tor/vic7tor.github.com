@@ -210,6 +210,8 @@ vectors是在devicemaps_init中定义的，这里还映射了些别的东西。
 
 要禁止一个中断，看handle_xxx_irq的代码(irqd_irq_disabled) ，似乎只能使用irq_disable。irq_disable是没有导出的，能用的有enable_irq与disable_irq这对函数，irq_desc的depth就是供这两个函数使用，来确定enable的调用与disable的调用是否匹配。它们最终调用irq_enable、irq_disable，最终调用chip.irq_unmask、chip.irq_disable。需要实现。irq_desc.depth默认值是1。系统默认所有中断都是被禁止的，所以，要先enable_irq后才启用了中断。
 
+enable_irq最终调用的irq_enable会有下面行为，如果irq_chip.irq_enable存在，就会调用irq_enbale。否则，会调用irq_unmask。irq_disable只会调用irq_chip.irq_disable
+
 关于enable_irq与disable_irq还有一个问题。request_irq可能会调用irq_startup。这个要看irq_desc有没有设置过标志。
 
 在request_irq调用的__setup_irq:
