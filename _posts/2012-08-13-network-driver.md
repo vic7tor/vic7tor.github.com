@@ -26,7 +26,9 @@ dev_addr - 保存设备硬件地址
 
 watchdog_timeo - watchdog超时，为多少jiffies。超时时调用tx_timeout。
 
-下面这个函数已经封装在了net_device_ops，并加了前缀`ndo_`，netdev_ops成员。
+netdev_ops - 指向net_device_ops
+
+#net_device_ops
 
 open、stop - 初始化和关闭网卡。ifconfig up down。初始化网卡。open申请网卡中断、DMA、IO端口等资源。还有调用netif_start_queue、netif_stop_queue打开关闭传送队列。
 
@@ -52,7 +54,7 @@ alloc_netdev分配一个新的struct net_device。第一个参数为priv的大�
 
 对于eth驱动可直接使用alloc_etherdev(sizeof(priv))来分配net_device。
 
-2.设备net_device成员。参考上面的。
+2.设置net_device成员。参考上面的。
 
 3.调用register_netdev(处理网卡名字中"%d"这样的格式化串)或register_netdevice注册net_device。
 
@@ -69,10 +71,19 @@ skb_reserve(skb, NET_IP_ALIGN);
 这个要明白那个skb_buf.length先吧
 
 #6.发送分组
-网卡忙时，start_xmit函数返回NETDEV_TX_BUSY不处理这个sk_buf。发送成功后释放sk_buf并返回NETDEV_TX_OK。成功后注意统计net_device.stats。
+网卡忙时，start_xmit函数返回NETDEV_TX_BUSY不处理这个sk_buf。发送成功后dev_kfree_skb释放sk_buf并返回NETDEV_TX_OK。成功后注意统计net_device.stats。
 
 还有，当预计到下个上层传来下一个要发送包肯定会返回NETDEV_TX_BUSY，那么可以调用，netif_stop_queue来停止队列，让上层不再提交发送请求。当空闲时，调用netif_wake_queue来唤醒队列。
 
 发送的数据为sk_buff.data指向的。长度为sk_buff.len。
 
+#7.一些函数
+
+    alloc_etherdev - 分配一个net_device并用ether_setup初始化。
+    free_netdev - 释放net_device结构
+    netdev_priv - 获得与net_device结构一起分配的priv区域的指针。
+    is_valid_ether_addr - 验证MAC地址是否有效
+    random_ether_addr - 随机生成MAC地址
+
+#8.初始化
 
