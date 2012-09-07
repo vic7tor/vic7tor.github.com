@@ -6,8 +6,8 @@ category:
 tags: []
 ---
 {% include JB/setup %}
-#1.sk_buf
-在网卡驱动使用到的有data成员，这个指针指向要发送的数据。还有一个成员是len与data_len，DM9000使用len做为数据长度，搞清楚再补上。
+#1.sk_buff
+在网卡驱动使用到的有data成员，这个指针指向要发送的数据。还有一个成员是len与data_len，DM9000使用len做为数据长度，搞清楚再补上。data_len好像就是len减去头部的长度。有人说，len是数据总长度，data_len是分片的长度。。。以后调试下吧。
 
 #2.net_device
 有下列成员：
@@ -32,7 +32,7 @@ netdev_ops - 指向net_device_ops
 
 open、stop - 初始化和关闭网卡。ifconfig up down。初始化网卡。open申请网卡中断、DMA、IO端口等资源。还有调用netif_start_queue、netif_stop_queue打开关闭传送队列。
 
-hard_start_xmit - 发送数据，从释放sk_buf。
+hard_start_xmit - 发送数据，从释放sk_buff。
 
 get_stats - 查询统计数据，ifconfig、netstat显示的，将数据封装成一个net_device_stats结构返回，net_device没有提供该数数。需要自己实现，可以在priv中实现。在新内核中，已经在net_device中设置了net_device_stats并且这个函数也不强制实现。
 
@@ -71,7 +71,7 @@ skb_reserve(skb, NET_IP_ALIGN);
 这个要明白那个skb_buf.length先吧
 
 #6.发送分组
-网卡忙时，start_xmit函数返回NETDEV_TX_BUSY不处理这个sk_buf。发送成功后dev_kfree_skb释放sk_buf并返回NETDEV_TX_OK。成功后注意统计net_device.stats。
+网卡忙时，start_xmit函数返回NETDEV_TX_BUSY不处理这个sk_buff。发送成功后dev_kfree_skb释放sk_buf并返回NETDEV_TX_OK。成功后注意统计net_device.stats。
 
 还有，当预计到下个上层传来下一个要发送包肯定会返回NETDEV_TX_BUSY，那么可以调用，netif_stop_queue来停止队列，让上层不再提交发送请求。当空闲时，调用netif_wake_queue来唤醒队列。
 
