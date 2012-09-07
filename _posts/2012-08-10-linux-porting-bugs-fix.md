@@ -35,7 +35,7 @@ arch/arm/boot/compressed/vmlinux是objcopy后就得到zImage。这个vmlinux与�
 
 objdump -d misc.o发现，这里面只有三个函数：`error`、`__div0`、`decompress_kernel`三个函数，根本没有putstr。对putstr的调用都会转为b 自己。非常不科学。
 
-找到原因了，这个问题曾经遇到过一次，新开一贴来讲这个问题。[见此]({% post 2012-08-11-gcc-optimize-hide-the-truth.md %})。
+找到原因了，这个问题曾经遇到过一次，新开一贴来讲这个问题。见`2012-08-11-gcc-optimize-hide-the-truth.md`。
 
 #2.s3c2440_clk_init
 这个函数是在early_init中执行的。这个时候，还没有调用map_init，访问那个寄存器地址后就会出错。
