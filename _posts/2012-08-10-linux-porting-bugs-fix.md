@@ -40,6 +40,8 @@ objdump -d misc.o发现，这里面只有三个函数：`error`、`__div0`、`de
 #2.s3c2440_clk_init
 这个函数是在early_init中执行的。这个时候，还没有调用map_init，访问那个寄存器地址后就会出错。
 
+这个时候已经调用了map_init，不知道怎么出问题的。
+
 log_buf是printk输出的地方，在还没有console的时候，可以通过gdb来查看这个。不过要先在gdb中`set print elements 0`才能显示出所有的内容。开了后，就可以使用`p log_buf`命令来显示printk的输出了。
 
 #3.iotable_init错误

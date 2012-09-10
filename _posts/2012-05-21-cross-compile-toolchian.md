@@ -18,11 +18,12 @@ binutils-2.22、
 
     ../binutils-2.22/configure --target=$TARGET --prefix=$PREFIX --disable-nls --disable-werror --disable-multilib --enable-shared
 #4.gcc pass 1
+在主机上装了gmp、mpfr、mpc的dev包之后，congiure时在命令行就不用指定`--with-gmp=`这样的参数了。debian系的是装libgmp-dev这样的包。
 
     ../gcc-4.6.3/configure --target=$TARGET --prefix=$PREFIX --without-headers --with-newlib --with-gnu-as --with-gnu-ld --disable-nls --disable-decimal-float --disable-libgomp --disable-multilib --disable-libmudflap --disable-libssp --disable-shared --disable-threads --disable-libstdcxx-pch --disable-libffi --enable-languages=c --without-ppl --without-cloog --with-float=soft --with-arch=armv4t --with-cpu=arm920t --with-tune=arm920t
     make all-gcc && make all-target-libgcc
     make install-gcc && make install-target-libgcc
-    ln -vs libgcc.a \`$TARGET-gcc -print-libgcc-file-name | sed 's/libgcc/\&\_eh/'\`
+    ln -vs libgcc.a \`$TARGET-gcc -print-libgcc-file-name | sed 's/libgcc/&_eh/'\`
 #5.kernel header files
 
     sudo make ARCH=arm CROSS_COMPILE=${TARGET}- INSTALL_HDR_PATH=$PREFIX/$TARGET/ headers_install
