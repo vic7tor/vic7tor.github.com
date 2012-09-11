@@ -30,23 +30,25 @@ netdev_ops - 指向net_device_ops
 
 #net_device_ops
 
-open、stop - 初始化和关闭网卡。ifconfig up down。初始化网卡。open申请网卡中断、DMA、IO端口等资源。还有调用netif_start_queue、netif_stop_queue打开关闭传送队列。
+open、stop - 初始化和关闭网卡。ifconfig up down。初始化网卡。
 
 hard_start_xmit - 发送数据，从释放sk_buff。
 
 get_stats - 查询统计数据，ifconfig、netstat显示的，将数据封装成一个net_device_stats结构返回，net_device没有提供该数数。需要自己实现，可以在priv中实现。在新内核中，已经在net_device中设置了net_device_stats并且这个函数也不强制实现。
 
-tx_timeout - 发送超时调用的函数。
+tx_timeout - 发送超时调用的函数。 dev_activate - `__netdev_watchdog_up`注册了一个定时器。
 
 do_ioctl - 
 
 change_mtu - 以太网设备设为eth_change_mtu。
 
-set_mac_address - 设置mac地址，可设为eth_mac_addr
+set_mac_address - 设置mac地址，可设为eth_mac_addr。新的MAC地址在第二个参数中。要转成`struct sockaddr *`的类型。在其sa_data成员中，长为ETH_ALEN。
 
 validate_addr - 可设为eth_valicate_addr
 
-set_rx_mode - 这个函数被调用时，把mac addr写入到网卡中并开启rx? dump_stack看看
+set_rx_mode - 这个函数被调用时，把mac addr写入到网卡中并开启rx? dump_stack看看，dump_stack结果是dev_set_rx_mode调用。`__dev_open`调用，dev_set_rx_mode。更多的见后面吧。
+
+dev_open - `__dev_open` - 
 
 #3.注册网络设备
 1.分配net_device
@@ -59,7 +61,7 @@ alloc_netdev分配一个新的struct net_device。第一个参数为priv的大�
 3.调用register_netdev(处理网卡名字中"%d"这样的格式化串)或register_netdevice注册net_device。
 
 #4.打开关闭函数
-ifconfig up down会调用open、close函数，在open函数中启用中断之类。
+ifconfig up down会调用open、close函数，在open函数中启用中断之类。见上面netdev_ops中的描述。open申请网卡中断、DMA、IO端口等资源。还有调用netif_start_queue、netif_stop_queue打开关闭传送队列。成功的话要返回0，出错也要返回相应值。否则使用这个接口的程序会得到打不开的错误。
 
 #5.接收分组
 确认数据正确之后，dev_alloc_skb。然后，skb_put把tail设置为包大小，并返回原来的tail指针的位置，读取数据的时候，就从这个原来的指针开始写入。
@@ -77,13 +79,32 @@ skb_reserve(skb, NET_IP_ALIGN);
 
 发送的数据为sk_buff.data指向的。长度为sk_buff.len。
 
-#7.一些函数
+#7.ndo_set_rx_mode
+这个函数有在dev_open中通过dev_set_rx_mode调用。在`__dev_set_rx_mode`上面的描述是：Upload unicast and multicast address lists to device and configure RX filtering.
+
+然后在ndo_set_rx_mode中要做的事情有：
+1.把单播地址和多播地址写入设备寄存器。单播地址存在net_device.dev_addr。
+
+2.如果，net_device的flags中有IFF_PROMISC则开启网卡的混杂模式。如果，flags中有IFF_ALLMULTI则设置网卡接收所有的多播包。
+
+多播地址的设置方法(64bit hash table)，来自DM9000驱动的代码：
+
+    u16 hash_table[4];
+    
+    netdev_for_each_mc_addr(ha, dev) {
+        hash_val = ether_crc_le(6, ha->addr) & 0x3f; 这个不像DM9000.md中描述的
+        hash_table[hash_val / 16] |= (u16) 1 << (hash_val % 16); 16的原因是u16
+    }
+
+
+#一些函数
 
     alloc_etherdev - 分配一个net_device并用ether_setup初始化。
     free_netdev - 释放net_device结构
     netdev_priv - 获得与net_device结构一起分配的priv区域的指针。
     is_valid_ether_addr - 验证MAC地址是否有效
     random_ether_addr - 随机生成MAC地址
+    netif_queue_stopped - tx队列是否停止
 
-#8.初始化
+#初始化
 
