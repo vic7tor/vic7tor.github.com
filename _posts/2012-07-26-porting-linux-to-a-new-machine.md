@@ -138,7 +138,20 @@ arch_irq_handler_default
 
 
 ##2.7 include/mach/system.h
-这个文件需要实现arch_reset和arch_idlea
+这个文件需要实现arch_reset和arch_idle
+
+在panic的消息发现了not imp这一句。然后cs f c panic。发现在这个system.h实现时arch_idle使用一句panic("not imp")实现的。
+
+start_kernel - rest_init - cpu_idle - pm_idle(default_idle) - arch_idle
+
+实现arch_idle:
+
+    #include <asm/proc-fns.h>
+    static void arch_idle(void)
+    {
+        cpu_do_idle();
+    } 
+
 
 ##2.8 Makefile.boot
 在生成vmlinux后，这个文件用于生成zImage。arch/arm/boot/Makefile需要这个文件。

@@ -36,7 +36,7 @@ hard_start_xmit - 发送数据，从释放sk_buff。
 
 get_stats - 查询统计数据，ifconfig、netstat显示的，将数据封装成一个net_device_stats结构返回，net_device没有提供该数数。需要自己实现，可以在priv中实现。在新内核中，已经在net_device中设置了net_device_stats并且这个函数也不强制实现。
 
-tx_timeout - 发送超时调用的函数。 dev_activate - `__netdev_watchdog_up`注册了一个定时器。
+tx_timeout - 发送超时调用的函数。 dev_activate - `__netdev_watchdog_up`修改定时器时间。dev_init_scheduler注册了一个定时器。
 
 do_ioctl - 
 

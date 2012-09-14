@@ -90,4 +90,6 @@ log_buf是printk输出的地方，在还没有console的时候，可以通过gdb
 #8.s3c2440_uart_driver_init
 注册uart_driver后，在错误处理代码前面没有加return，代码执行行到uart_unregister_driver又把uart_driver注销了，所以那个kgdboc找不到tty_driver...
 
+#9.arch_idle panic
+见port那一篇文章的system.h
 
