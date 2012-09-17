@@ -9,6 +9,12 @@ tags: []
 #1.sk_buff
 在网卡驱动使用到的有data成员，这个指针指向要发送的数据。还有一个成员是len与data_len，DM9000使用len做为数据长度，搞清楚再补上。data_len好像就是len减去头部的长度。有人说，len是数据总长度，data_len是分片的长度。。。以后调试下吧。
 
+    [    1.750000] sk_buff: len = 42, data_len = 0                                  
+    [    1.750000] dm9000 dump skbuff:                                              
+    [    1.750000] 00000000: ff ff ff ff ff ff 16 05 d8 57 e5 de 08 06 00 01        
+    [    1.760000] 00000010: 08 00 06 04 00 01 16 05 d8 57 e5 de 0a 0a 0a 64        
+    [    1.760000] 00000020: 00 00 00 00 00 00 0a 0a 0a 01 
+
 #2.net_device
 有下列成员：
 
@@ -36,7 +42,13 @@ hard_start_xmit - 发送数据，从释放sk_buff。
 
 get_stats - 查询统计数据，ifconfig、netstat显示的，将数据封装成一个net_device_stats结构返回，net_device没有提供该数数。需要自己实现，可以在priv中实现。在新内核中，已经在net_device中设置了net_device_stats并且这个函数也不强制实现。
 
-tx_timeout - 发送超时调用的函数。 dev_activate - `__netdev_watchdog_up`修改定时器时间。dev_init_scheduler注册了一个定时器。
+tx_timeout - 发送超时调用的函数。 dev_activate - `__netdev_watchdog_up`修改定时器时间。dev_init_scheduler注册了一个定时器。处理函数是dev_watchdog。然后，超时的条件是：
+
+    if (netif_tx_queue_stopped(txq) &&
+           time_after(jiffies, (trans_start + dev->watchdog_timeo))) {
+       some_queue_timedout = 1;
+       break;
+    }
 
 do_ioctl - 
 
@@ -78,6 +90,20 @@ skb_reserve(skb, NET_IP_ALIGN);
 还有，当预计到下个上层传来下一个要发送包肯定会返回NETDEV_TX_BUSY，那么可以调用，netif_stop_queue来停止队列，让上层不再提交发送请求。当空闲时，调用netif_wake_queue来唤醒队列。
 
 发送的数据为sk_buff.data指向的。长度为sk_buff.len。
+
+查看包的内容，内核有一个函数，print_hex_dump：
+
+    void print_hex_dump(const char *level, const char *prefix_str,
+                           int prefix_type, int rowsize, int groupsize,
+                           const void *buf, size_t len, bool ascii);
+    level - KERN_INFO KERN_DEBUG这样的
+    prefix_str - 前缀输出，每一行都会有一个。
+    prefix_type - DUMP_PREFIX_NONE,DUMP_PREFIX_ADDRESS,DUMP_PREFIX_OFFSET
+    rowsize - 一行有多大
+    groupsize - 多少个字节组成一组
+    buf - dump这玩意
+    len - 长度
+    ascii - 不懂
 
 #7.ndo_set_rx_mode
 这个函数有在dev_open中通过dev_set_rx_mode调用。在`__dev_set_rx_mode`上面的描述是：Upload unicast and multicast address lists to device and configure RX filtering.
