@@ -84,6 +84,15 @@ skb_reserve(skb, NET_IP_ALIGN);
 
 这个要明白那个skb_buf.length先吧
 
+    struct sk_buff *skb;
+    skb = dev_alloc_skb(rx_info.lenght + NET_IP_ALIGN);
+    skb_reserve(skb, NET_IP_ALIGN);
+    buf = skb_put(skb, rx_info.lenght);
+    read_bulk_u16(info, MRCMD, buf, rx_info.lenght);
+    skb->protocol = eth_type_trans(skb, dev);
+    处理CRC什么的。
+    netif_rx(skb);
+
 #6.发送分组
 网卡忙时，start_xmit函数返回NETDEV_TX_BUSY不处理这个sk_buff。发送成功后dev_kfree_skb释放sk_buf并返回NETDEV_TX_OK。成功后注意统计net_device.stats。
 

@@ -93,3 +93,9 @@ log_buf是printk输出的地方，在还没有console的时候，可以通过gdb
 #9.arch_idle panic
 见port那一篇文章的system.h
 
+#10. eint无穷中断
+s3c2440_eint_demux取代了，原来的handle_level_irq，但是在s3c2440_eint_demux中没有mask、ack IRQ_EINT4_7所以就导至了无穷循环。
+
+还有一个没有决定的东西是：对于level型中断，在没有清除控制器的之前。那个，中断会一直持续，对于s3c2440的EINTMASK又对EINTPEND没有作用。可能对上级EINT4_7有作用。尽管MASK掉了，但是，EINTPEND因为level型中断，仍然为1.这样又会再调用一次中断处理。
+
+对level型的，在umask的时候又写一下pend寄存器吧。
