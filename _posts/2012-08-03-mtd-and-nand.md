@@ -90,6 +90,7 @@ bbt的以后用stap跟踪吧，现在能找了。
 #mtd的一个文件系统
 
 #一个mtd nand驱动的实现
+重要的是实现nand_chip中的这些东西，包括那个ecc成员中的。
 ##1.先设置一些默认值
 
 	mtd->priv = chip; - 这个很多函数通过这个找到nand_chip
