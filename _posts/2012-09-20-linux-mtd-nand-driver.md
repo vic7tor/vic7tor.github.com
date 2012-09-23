@@ -8,9 +8,10 @@ tags: []
 {% include JB/setup %}
 
 #mtd结构
-##1.mtd_info
+##1.mtd_info <linux/mtd/mtd.h>
 用来描述一个设备或一个分区
 
+    name - 名字，很重要一个结构，u-boot使用mtdids、mtdparts(linux内核使用)环境变量时要用到这个东西
     type - MTD_RAM MTD_ROM MTD_NORFLASH MTD_NANDFLASH
     flags - MTD_WRITEABLE MTD_BIT_WRITEABLE MTD_NO_ERASE ...
     read write read_oob write_oob erase 读写函数，可以看另一篇文档
@@ -27,7 +28,7 @@ tags: []
     offset - 该分区的偏移
     index － 分区编号
 
-##3.mtd_partion
+##3.mtd_partion <linux/mtd/partitions.h>
 
     name - 分区名字
     size - 分区大小
@@ -40,7 +41,7 @@ tags: []
     del_mtd_partitions
 
 #2.nand
-##1.nand_chip
+##1.nand_chip <linux/mtd/nand.h>
 
     IO_ADDR_R - 一般在读NAND的寄存器使用
     IO_ADDR_W - 一般在写NAND的寄存器时使用，这两个RW如何用，还是要看自己
@@ -48,9 +49,9 @@ tags: []
     write_buf - 写buf中的指定字节
     read_buf - 读指定字节到buf中
     chip_delay - 等待这个时间后调用下面的dev_ready
-    select_chip - 这个函数是要实现的，用来选择chip
-    cmd_ctrl －第二个参数cmd，当cmd为NAND_CMD_NONE时直接返回，然后，当第三个参数ctrl & CLE为真时，那么就要写入到命令寄存器。否则写入到地址中。
-    dev_ready - 判断设备是否忙
+    select_chip - 这个函数是要实现的，用来选择chip，第二个参数为-1表示取消选择
+    cmd_ctrl －第二个参数cmd，当cmd为NAND_CMD_NONE时直接返回，然后，当第三个参数ctrl & NAND_CLE为真时，那么就要写入到命令寄存器。否则写入到地址中。
+    dev_ready - 判断设备是否忙，返回1 ready。
     cmd_func － 
     各种NAND的信息
     nand_ecclayout - ecclayout
@@ -95,6 +96,7 @@ tags: []
 #1.初始化过程
 
     mtd->priv设为nand_chip
+    mtd->owner = THIS_MODULE;
     设置nand_chip中的东西
     设置nand_chip.nand_ecc_ctrl中的mode、(size bytes layout这几个成员等nand_scan_ident后设置)
     nand_scan_ident
