@@ -44,7 +44,7 @@ tags: []
 ##1.nand_chip <linux/mtd/nand.h>
 
     IO_ADDR_R - 一般在读NAND的寄存器使用
-    IO_ADDR_W - 一般在写NAND的寄存器时使用，这两个RW如何用，还是要看自己
+    IO_ADDR_W - 一般在写NAND的寄存器时使用，这两个RW如何用，还是要看自己。这个还有东西用到的，那个nand_set_defaults设置的nand_read_byte，这个要指向NFDATA。
     各种读写函数
     write_buf - 写buf中的指定字节
     read_buf - 读指定字节到buf中
@@ -52,11 +52,11 @@ tags: []
     select_chip - 这个函数是要实现的，用来选择chip，第二个参数为-1表示取消选择
     cmd_ctrl －第二个参数cmd，当cmd为NAND_CMD_NONE时直接返回，然后，当第三个参数ctrl & NAND_CLE为真时，那么就要写入到命令寄存器。否则写入到地址中。
     dev_ready - 判断设备是否忙，返回1 ready。
-    cmd_func － 
+    cmd_func － nand_scan_tail自动设置
     各种NAND的信息
     nand_ecclayout - ecclayout
     nand_ecc_ctrl ecc - 这个结构当然重要了，见另一篇文章。
-    options - NAND_BUSWIDTH_16
+    options - NAND_BUSWIDTH_16 NAND_NO_SUBPAGE_WRITE(MLC不支持SUBPAGE)
 
 ##2.nand_ecc_ctrl
 
@@ -65,6 +65,9 @@ tags: []
     calculate - 硬件ECC要实现这个函数
     correct - 硬件ECC要实现这个函数
     各种读写函数
+
+###1.硬件ECC的实现
+另开一篇文章吧
 
 ##3.nand_scan_ident
 ###1.nand_set_defaults
@@ -91,7 +94,6 @@ tags: []
 
 ##5.mtd_device_parse_register
 
-
 #3.驱动实现
 #1.初始化过程
 
@@ -102,3 +104,12 @@ tags: []
     nand_scan_ident
     nand_scan_tail
     mtd_device_parse_register
+
+#4.mtd test
+这玩意只能编译成模块
+
+#5.BUG
+##1.ECC ERROR
+弄UBIFS挂载文件系统的时候报`UBI error: ubi_io_read: error -74 (ECC error) while reading 64 bytes from PEB 0:0, read 64 bytes`。不像网上说的不支subpage读写什么的。看到这句话的上面还有几句`uncorrectable error`在drivers/mtd目录下grep了一下，发现问题出现在`drivers/mtd/nand/nand_ecc.c`的`__nand_correct_data`。`chip->ecc.correct`指向这个函数。看来应该是u-boot与内核的SOFT ECC不兼容。
+
+那么就实现硬件ECC吧。放在上面。
