@@ -39,11 +39,11 @@ nand_read_page_hwecc这个函数里要读写steps次。一次会读size大小，
 ##5.layout
 见下面
 ##5.hwctl
-`chip->ecc.hwctl(mtd, NAND_ECC_WRITE);`调用的。这个是在所有读写操作前的，NFCONT_INITECC，初始化ECC。
+steps读写中，每次都调用一下这个。`chip->ecc.hwctl(mtd, NAND_ECC_WRITE);`调用的。这个是在所有读写操作前的，NFCONT_INITECC，初始化ECC。
 ##6.calculate
-从寄存器中读取ECC写入到传入的第三个参数。
+steps读写中，每次都调用一下这个。从寄存器中读取ECC写入到传入的第三个参数。
 ##7.correct
-返回值是修正的数据的数量。返回负值是出错的情况。见nand_read_page_hwecc。
+steps读写完成后，调用这个函数。返回值是修正的数据的数量。返回负值是出错的情况。见nand_read_page_hwecc。
 
 #2.nand_ecclayout
 这个的实例可以见nand_scan_tail引用的nand_oob_64等
@@ -131,3 +131,11 @@ eccpos：nand_read_page_hwecc读完一页后会有一个nand_ecc_ctrl.total数�
             chip->write_buf(mtd, chip->oob_poi, mtd->oobsize);
     }
 
+#ECC的计算方式
+看S3C2440数据手册的时候，看那个ECC的格式比较奇怪。P2048跟在P1后面。然后，看那个三星那份`NAND Flash ECC Algorithm`，看到P1、P2、P4是列的。突然想到，S3C2440那样的ECC格式是为了与那个256字节的算法兼容。增加字节计算的字节数就会增加P2048这样的东西，256字节对应P1024。
+
+那个Partiy Generation(In case of 8bit input)中，说明了，P1、P2、P4是8位中哪些相异或生成的。在Parity Generation(In case of 256byte input)当数据不是一个字节时，P1、P2、P4是所有这些字节的这些位相异或(这个字节的结果再异或下一个字节的结果)。然后就是P8...P1024，随着字节数的增加而增加。512字节是P2048，1024字节就是P4096这样子。
+
+所以，S3C2440中那个奇怪的2048 BYTE ECC PARITY CODE ASSIGNMET TABLE就是为了与256字节的兼容才这样子做的。
+
+关于ECC错误的恢复，以后有这个需要才研究吧。配合那个`NAND Flash ECC Algorithm`这个文档来研究吧。
