@@ -42,6 +42,8 @@ nand_read_page_hwecc这个函数里要读写steps次。一次会读size大小，
 steps读写中，每次都调用一下这个。`chip->ecc.hwctl(mtd, NAND_ECC_WRITE);`调用的。这个是在所有读写操作前的，NFCONT_INITECC，初始化ECC。
 ##6.calculate
 steps读写中，每次都调用一下这个。从寄存器中读取ECC写入到传入的第三个参数。
+
+S3C2440那个是NFMECC是生成ECC的那个NFMECCD是要放入数据，读写完成后，看NFMSTAT用的。
 ##7.correct
 steps读写完成后，调用这个函数。返回值是修正的数据的数量。返回负值是出错的情况。见nand_read_page_hwecc。
 
