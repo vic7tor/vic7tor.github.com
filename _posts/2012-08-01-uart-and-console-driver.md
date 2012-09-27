@@ -19,7 +19,7 @@ tags: []
             int     (*setup)(struct console *, char *options);
             int     (*early_setup)(void);
             short   flags;
-            short   index; /* 如果是系统第一个注册的console会被置为0 */
+            short   index; /* 如果是系统第一个注册的console会被置为0 具体作用见 init那篇文章的console节*/
 	    			/* preferred_console会根据内核console参数被设置 */
             int     cflag;
             void    *data;
@@ -61,7 +61,7 @@ console的write函数要用使用uart_console_write要么在自己代码中做�
         int		major;
         int		minor;
         int		nr;
-        struct console	*cons;
+        struct console	*cons; 也是一个重要的值，见后面的，uart_port中的描述。
         ...
     };
 
@@ -70,11 +70,16 @@ uart_register_driver uart_unregister_drive要通过这个index访问uart_driver�
 ##2.uart_port
 很大的一个结构。拿向个出来说了。*查看他们作用的一个方法是：到uart_register_driver的定义所在的文件，搜索它的名字*
 
-    line - tty_register_device中的index
+    line - tty_register_device中的index。很重要的一个成员，用来识别一个tty_driver中是哪个tty_device的。
     iobase、membase、mapbase - 这三个，其中一个还是要设的uart_config_port检测到这几个都为0的话会返回。为了写出可复用的代码，选membase或mapbase作为这个uart端口的基址。
     icount - 记录cts, dsr等等的次数，tx, rx的字节数。
     fifosize - 主要用来计算uart_wait_until_sent使用的timeout
     ops - uart_ops
+    type - 这个玩意重要的说，详见init那一篇文章的console节。值是PORT_xxx，如果没有你的，你需要自己定义一个,在文件：include/linux/serial_core.h。三星的驱动是在config_port里设置的。
+    iotype - 这个也要设，要不然uart_report_port中会说你。根据这个成员，决定mapbase还是membase哪个需要设置,见uart_report_port。三星的设为这个UPIO_MEM。
+    flags - 设置UPF_BOOT_AUTOCONF，uart_configure_port才会调用uart_ops的config_port。
+    lock - 这个需要初始化吧，因为调用set_mctrl时是获得锁的，如果是全局变量就不用了，就算初始化也是设置为0；
+    cons - 见后面的uart_ops的set_termios.这个值在uart_add_one_port中被设置为与uart_driver中相同的值。
 
 其它的没发现什么大用。
 
@@ -96,7 +101,7 @@ stop_tx - uart_stop调用，uart_stop为tty_operations的成员。s3c2440的驱�
 
 stop_rx - 在uart_close中被调用。
 
-没有start_rx - uart_insert_char在rx处理函数中向tty核心发送数据。这么看来，这设计适合用中断来处理。怎么rx见后面大节。
+没有start_rx - uart_insert_char在rx处理函数中向tty核心发送数据。这么看来，这设计适合用中断来处理。怎么rx见后面大节。因为stop_rx是在uart_close中调用的，那么在startup函数中应该打开中断。
 
 start_tx的处理(如用中断处理，则在中断中):
 
@@ -106,7 +111,7 @@ start_tx的处理(如用中断处理，则在中断中):
 2.发送一般数据
 
     struct circ_buf *xmit = &port->state->xmit;
-    if (uart_circ_empty(xmit)) {
+    if (!uart_circ_empty(xmit)) {
         iowrite8(xmit->buf[xmit->tail], REG_UART(UTXH));
 	ximt->tail = (xmit->tail + 1) & (UART_XMIT_SIZE - 1);
 
@@ -122,8 +127,14 @@ enable_ms、get_mctrl、set_mctrl都是与modem相关的。
 poll_put_char、poll_get_char kgdoc必要的条件。
 
 ###4.
-set_termios - uart_set_options、uart_change_speed调用。要使用这个来取得uart_get_baud_rate
+set_termios - uart_set_options、uart_change_speed调用。要使用这个来取得uart_get_baud_rate。在uart_startup中会调用uart_change_speed。这样baud率就会又变了。
+
+可以继承console的波特率，uart_port的cons成员要指向console。这样，uart_startup中，会把tty_struct的termios设为这个值(console的cflag,uart_set_option设置这个值)。uart_change_speed用的新termios还是tty_struct中的termios，改了点东西，不过不影响波特率。
+
+
+
 `termios->c_cflag & CSIZE`
+
 c_cflag中的:
 1.CSTOPB
 这个位被设置则两个停止位，否则为一个停止位
@@ -136,7 +147,17 @@ c_cflag中的:
 5.CRTSCTS
 自动流控
 ###5. config_port
-用来初始化UCON了
+用来初始化UCON了。这个函数要想被调用，uart_port的flags要设置UPF_BOOT_AUTOCONF。
+
+###6. set_mctrl
+一定要有，uart_configure_port中强制执行。没有就pc跳到0去，你就等着kernel Oops吧。
+###7.get_mctrl && enable_ms
+这两个玩意有在uart_carrier_raised中使用。tty_port_carrier_raised调用`port->ops->carrier_raised(port)`uart中的实现指向uart_carrier_raised。都是强制调用的。
+
+uart_open调用的tty_port_block_til_ready调用的tty_port_carrier_raised。uart_carrier_raised，返回1才会结束这个block。所以get_mctrl的实现要`return TIOCM_CAR | TIOCM_DSR;`。
+
+enable_ms什么也不做吧。
+
 
 #3.uart rx与sysrq
 更多Documentation/sysrq.txt。
