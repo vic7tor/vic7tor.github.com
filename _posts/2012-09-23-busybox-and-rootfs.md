@@ -49,6 +49,17 @@ mdev是udev的缩水版，只通过设备名来匹配。那个devicename_regex�
      =: move, >: move and create a symlink
      @|$|*: run $cmd on delete, @cmd on create, *cmd on both
 
+#初始化脚本
+那句::askfirst:-/bin/sh就可以有个终端也。因为，在内核的启动代码已经打开了/dev/console做为控制终端。
+
+挂载文件系统
+
+    mount -t proc nodev /proc
+    mount -t sysfs nodev /sys
+    mount -t tmpfs nodev /dev
+
+挂上/sys与/dev后就可以执行mdev -s来在/dev生成设置结点了。不用echo到那个hotplug文件。
+
 #问题
 ##1.
 panic attemp to kill init那个。
