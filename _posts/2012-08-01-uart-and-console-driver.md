@@ -158,6 +158,8 @@ uart_open调用的tty_port_block_til_ready调用的tty_port_carrier_raised。uar
 
 enable_ms什么也不做吧。
 
+###8.tx_empty
+uart_wait_until_sent调用。empty返回1.
 
 #3.uart rx与sysrq
 更多Documentation/sysrq.txt。

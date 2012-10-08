@@ -13,21 +13,164 @@ tags: []
 
 #1.gadget.h
 ##0.usb_request
-##1.usb_ep
-ops - usb_ep_ops 实现发送数据数据。
-usb_ep_alloc_request、usb_ep_free_request、usb_ep_free_request、usb_ep_dequeue
 
-##2.usb_gadget
+    struct usb_request {
+        void                    *buf;
+        unsigned                length;
+        dma_addr_t              dma;
+        unsigned                stream_id:16;
+        unsigned                no_interrupt:1;
+        unsigned                zero:1;
+        unsigned                short_not_ok:1;
+        void                    (*complete)(struct usb_ep *ep,
+                                        struct usb_request *req);
+        void                    *context;
+        struct list_head        list;
+        int                     status;
+        unsigned                actual;
+    };
+
+##1.usb_ep
+
+    struct usb_ep { 
+        void                    *driver_data;
+        const char              *name;
+        const struct usb_ep_ops *ops;
+        struct list_head        ep_list;
+        unsigned                maxpacket:16;
+        unsigned                max_streams:16;
+        unsigned                mult:2;  
+        unsigned                maxburst:4;
+        u8                      address;
+        const struct usb_endpoint_descriptor    *desc;
+        const struct usb_ss_ep_comp_descriptor  *comp_desc;
+     };
+
+name - ep的名字，想怎么取就怎么取吧
+
+ops - 见下面
+
+ep_list - 与usb_gadget的这个成员串在一起，用来表示这个usb_gadget拥有的端点。
+
+maxpacket - 填的是fifo size.难道一个包的长度只能是fifo大小?
+
+mult - 
+
+maxburst - usb3使用的
+
+address - 
+
+desc - 端点使能前就要被设置的
+
+comp_desc - 
+
+ops - usb_ep_ops 实现发送数据数据。
+
+usb_ep_autoconfig_reset、usb_ep_autoconfig，gadget_driver用来分配端点。
+
+##2.usb_ep_ops
+
+    struct usb_ep_ops {
+        int (*enable) (struct usb_ep *ep,
+                const struct usb_endpoint_descriptor *desc);
+        int (*disable) (struct usb_ep *ep);
+        struct usb_request *(*alloc_request) (struct usb_ep *ep,
+                gfp_t gfp_flags);
+        void (*free_request) (struct usb_ep *ep, struct usb_request *req);
+        int (*queue) (struct usb_ep *ep, struct usb_request *req,
+                gfp_t gfp_flags);
+        int (*dequeue) (struct usb_ep *ep, struct usb_request *req);
+        int (*set_halt) (struct usb_ep *ep, int value);
+        int (*set_wedge) (struct usb_ep *ep);
+        int (*fifo_status) (struct usb_ep *ep);
+        void (*fifo_flush) (struct usb_ep *ep);
+    };
+
+enable(usb_ep_enable) - 配置硬件使能这个端点，并设这个端点的描述符(usb_endpoint_descriptor)为传入的第二个参数。根据usb_endpoint_descriptor来设置端点的方向(bEndpointAddress USB_DIR_IN)。gadget_driver的setup处理了所有的描述符请求。在setup中，也是通过usb_ep_queue这样的机制来处理传输数据的。
+
+disable(usb_ep_disable) - 看了名字你就知道。
+
+alloc_request(usb_ep_alloc_request)、free_request(sb_ep_free_request) 简单的分配内存，同时初始化usb_request的list成员。usb_request的buf成员不需要分配。这个由gadget driver分配，见zero的alloc_ep_req函数。
+
+queue(usb_ep_queue) - 刚进队的时候如果能进行数据传输的话就马上进行数据传输，如果不能的话，就只能等到当前传输完成后，在中断中处理了。
+
+dequeue(usb_ep_dequeue) - 以参数ECONNRESET调用完成函数。
+
+##3.usb_gadget
 usb_gadget - represents a usb slave device
+
+    struct usb_gadget { 
+        /* readonly to gadget driver */
+        const struct usb_gadget_ops     *ops;
+        struct usb_ep                   *ep0;
+        struct list_head                ep_list;        /* of usb_ep */
+        enum usb_device_speed           speed;
+        unsigned                        is_dualspeed:1;
+        unsigned                        is_otg:1;
+        unsigned                        is_a_peripheral:1;
+        unsigned                        b_hnp_enable:1;
+        unsigned                        a_hnp_support:1;
+        unsigned                        a_alt_hnp_support:1;
+        const char                      *name;
+        struct device                   dev;
+    };
+
+ops - 
+
+ep0 - 
+
+ep_list - gadget驱动的除ep0外的`struct usb_ep`结构的ep_list成员的链表头。这个成员要在初始化的把那些usb_ep放进来。find_ep和usb_ep_autoconfig_ss就是用这个成员来查找usb_ep的。
 
 usb_gadget_ops里面的start在注册usb_gadget_driver时被传进来。
 
 一个udc驱动就要使用usb_add_gadget_udc来注册usb_gadget.根据usb device control的个数来注册吧。
 
-##3.usb_gadget_driver
+##4.usb_gadget_ops
+
+    struct usb_gadget_ops {
+        int     (*get_frame)(struct usb_gadget *);
+        int     (*wakeup)(struct usb_gadget *);
+        int     (*set_selfpowered) (struct usb_gadget *, int is_selfpowered);
+        int     (*vbus_session) (struct usb_gadget *, int is_active);
+        int     (*vbus_draw) (struct usb_gadget *, unsigned mA);
+        int     (*pullup) (struct usb_gadget *, int is_on);
+        int     (*ioctl)(struct usb_gadget *,
+                                unsigned code, unsigned long param);
+        void    (*get_config_params)(struct usb_dcd_config_params *);
+        int     (*udc_start)(struct usb_gadget *,
+                        struct usb_gadget_driver *);
+        int     (*udc_stop)(struct usb_gadget *,
+                        struct usb_gadget_driver *);
+        /* Those two are deprecated */
+        int     (*start)(struct usb_gadget_driver *,
+                        int (*bind)(struct usb_gadget *));
+        int     (*stop)(struct usb_gadget_driver *);
+    };
+
+udc_start - 注册usb_gadget_driver时使用。使usb_gadget的device结构的driver指向usb_gadget_driver的driver，然后device_add添加这个device结构。把usb_gadget_driver存起来，然后，使能初始化并使能硬件控制器。
+
+udc_stop - device_del注销device结构，如果usb_gadget_driver.disconnect存在的话就调用。强制调用usb_gadget_driver.unbind。
+
+start、stop同udc_start、udc_stop的功能。这两个函数将要被替换掉。见usb_gadget_probe_driver。
+
+get_config_params - 
+
+get_frame -
+
+wakeup -
+
+set_selfpowered -
+
+vbus_session - 
+
+###内核配置
+
+    USB Gadget Support->USB Peripheral Controller(这个是个choice没有类型的，就变成了一个菜单吧，在drivers/usb/gadget/Kconfig，然后定义自己的udc的。)
+
+##5.usb_gadget_driver
 usb_gadget_driver - driver for usb 'slave' devices。应该是实现一个具体的功能，比方说串口，或者U盘什么的。
 
-setup - 要实现所有的get_desciptor请求。get/set_interface、get/set_configuration也一定要实现。
+setup - 要实现所有的get_desciptor请求。get/set_interface、get/set_configuration也一定要实现。在setup中，也是通过usb_ep_queue这样的机制来处理传输数据的。
 
 usb_gadget_driver与usb_gadget之间的数据交流不管输入输出都是用那个usb_request。是输入还是输出是由端点的类型决定的。
 
