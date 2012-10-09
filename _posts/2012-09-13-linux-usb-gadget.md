@@ -30,6 +30,24 @@ tags: []
         unsigned                actual;
     };
 
+buf - 数据传输使用的buf是usb_gadget_driver分配的
+
+length - buf的长度
+
+dma - 
+
+no_interrupt - 
+
+complete - 传输结束时调用的函数。
+
+context - 可以用来让usb_gadget_driver放一些数据
+
+list - 应该可以用来让usb_gadget把一个ep上的usb_request串在一起
+
+status - 报告传输结束的状态，作为complete回调函数的返回值。`-ESHUTDOWN`表示设备disconnet。
+
+actual - 实际传输的字节数？
+
 ##1.usb_ep
 
     struct usb_ep { 
@@ -196,3 +214,44 @@ usb_gadget_probe_driver - 注册gadget driver，只有这个函数，目前版�
 bind要做的事情，稍后列出来。
 
 usb_gadget_unregister_driver -
+
+#3.处理控制传输
+##1.include/linux/usb/ch9.h
+###1.usb_ctrlrequest
+
+    struct usb_ctrlrequest {
+        __u8 bRequestType;
+        __u8 bRequest;
+        __le16 wValue;
+        __le16 wIndex;
+        __le16 wLength;
+    } __attribute__ ((packed));
+
+###2.bRequestType
+这个一共分成三个域:传输方向、类型、接收者
+
+    D7(方向): 没有MASK直接和USB_DIR_IN相与吧。USB_DIR_OUT、USB_DIR_IN(值为0x80)
+    D6..5(类型)：与USB_TYPE_MASK相与分离这个域。USB_TYPE_STANDARD、USB_TYPE_CLASS、USB_TYPE_VENDOR、USB_TYPE_RESERVED
+    D4..0(接收者)：与USB_RECIP_MASK相与分离出这个域。USB_RECIP_DEVICE、USB_RECIP_INTERFACE、USB_RECIP_ENDPOINT、USB_RECIP_OTHER。
+
+###2.bRequest - USB_REQ_*
+有下面这些宏：
+
+    USB_REQ_GET_STATUS
+    USB_REQ_CLEAR_FEATURE
+    USB_REQ_SET_FEATURE
+    USB_REQ_SET_ADDRESS
+    USB_REQ_GET_DESCRIPTOR
+    USB_REQ_SET_DESCRIPTOR
+    USB_REQ_GET_CONFIGURATION
+    USB_REQ_SET_CONFIGURATION
+    USB_REQ_GET_INTERFACE
+    USB_REQ_SET_INTERFACE
+    USB_REQ_SYNCH_FRAME
+
+这些请求由usb_gadget处理的请求有set_address、feature相关的get_status、set_feature、clear_feature。
+
+usb_gadget_driver的setup处理get/set_descriptor、get/set_configuration、get/set_interface
+
+#4.一般数据处理
+关注usb_endpoint_descriptor的bEndpointAddress的第7位表示这个端点的传输方向。然后把这个队列上的usb_request依据这个传输方向来发出去或者接收。usb_endpoint_dir_in、usb_endpoint_dir_out这两个函数可以用来判断传输方向。
