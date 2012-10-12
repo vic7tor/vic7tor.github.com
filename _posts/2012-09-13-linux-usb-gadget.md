@@ -139,6 +139,8 @@ ep0 -
 
 ep_list - gadget驱动的除ep0外的`struct usb_ep`结构的ep_list成员的链表头。这个成员要在初始化的把那些usb_ep放进来。find_ep和usb_ep_autoconfig_ss就是用这个成员来查找usb_ep的。
 
+dev - 在usb_add_gadget_udc时，并不会使用这个dev来添加到`/sys/class/udc`下面，而是新建一个。usb_gadget中的这个dev是用来将来与usb_gadget_driver里的driver配对用的，而且是那个usb_gadget_driver注册设备的父母(见msg_do_config调用的fsg_common_init)。这个dev在usb_add_gadget_udc那段时间初始化，在usb_gadget_ops的start初始化driver成员后用device_add注册。如果使用udc_start的话，还是不行，因为那个bind是在udc_start之前调用的，而在start中，是start调用bind的，看了下at91的驱动，在usb_add_gdaget_udc之前就使用register_device注册这个结构了。初始化init_name和parent
+
 usb_gadget_ops里面的start在注册usb_gadget_driver时被传进来。
 
 一个udc驱动就要使用usb_add_gadget_udc来注册usb_gadget.根据usb device control的个数来注册吧。
@@ -165,7 +167,7 @@ usb_gadget_ops里面的start在注册usb_gadget_driver时被传进来。
         int     (*stop)(struct usb_gadget_driver *);
     };
 
-udc_start - 注册usb_gadget_driver时使用。使usb_gadget的device结构的driver指向usb_gadget_driver的driver，然后device_add添加这个device结构。把usb_gadget_driver存起来，然后，使能初始化并使能硬件控制器。
+udc_start - 注册usb_gadget_driver时使用。使usb_gadget的device结构的driver指向usb_gadget_driver的driver，然后device_add添加这个device结构，这么做的话，usb_gadget_driver中注册device就会出错，看上面usb_gadget中的解释。把usb_gadget_driver存起来，然后，使能初始化并使能硬件控制器。
 
 udc_stop - device_del注销device结构，如果usb_gadget_driver.disconnect存在的话就调用。强制调用usb_gadget_driver.unbind。
 

@@ -56,6 +56,7 @@ driver_init还做了很多事啊。
 
 2.结构初始化
 
+    #include <linux/platform_device.h>
     static struct resource xxx_resources[] = {
         [0] = {
                 .start = ,
@@ -105,6 +106,7 @@ platform_get_irq
 
 2.定义实例
 
+    #include <linux/platform_device.h>
     static struct platform_driver s3c2440_serial_driver = {
         .probe          = s3c2440_serial_probe,
         .remove         = __devexit_p(s3c24xx_serial_remove),

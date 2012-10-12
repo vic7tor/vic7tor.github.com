@@ -27,3 +27,5 @@ tags: []
     len - 长度
     ascii - 不懂
 
+#3.request_irq的dev_id参数
+这个参数还用来识别共享中断时，不同的action。见free_irq的实现。
