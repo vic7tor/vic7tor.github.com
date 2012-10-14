@@ -32,7 +32,7 @@ tags: []
 
 buf - 数据传输使用的buf是usb_gadget_driver分配的
 
-length - buf的长度
+length - buf中需要传送的数据长度。
 
 dma - 
 
@@ -46,7 +46,7 @@ list - 应该可以用来让usb_gadget把一个ep上的usb_request串在一起
 
 status - 报告传输结束的状态，作为complete回调函数的返回值。`-ESHUTDOWN`表示设备disconnet。
 
-actual - 实际传输的字节数？
+actual - 实际传输成功的字节数
 
 ##1.usb_ep
 
@@ -64,7 +64,15 @@ actual - 实际传输的字节数？
         const struct usb_ss_ep_comp_descriptor  *comp_desc;
      };
 
-name - ep的名字，想怎么取就怎么取吧
+name - ep的名字，这个名字可不能乱取，有格式的，见ep_matches这个函数。
+
+    ep1, ep2, ... address is fixed, not direction or type
+    ep1in, ep2out, ... address and direction are fixed, not type
+    ep1-bulk, ep2-bulk, ... address and type are fixed, not direction
+    ep1in-bulk, ep2out-iso, ... all three are fixed
+    ep-* ... no functionality restrictions
+    Type suffixes are "-bulk", "-iso", or "-int".  Numbers are decimal.
+    Less common restrictions are implied by gadget_is_*().
 
 ops - 见下面
 
@@ -208,7 +216,7 @@ usb_ep_autoconfig使用一个usb_endpoint_descriptor描述符来分配一个端�
 
 
 #2.udc驱动
-在中断中处理请求，如果设备状态在没有配置情况下，处理一般的请求，其它的交给usb_gadget_driver.setup处理。usb_gadget_driver上方定义的文档写道。s
+在中断中处理请求，如果设备状态在没有配置情况下，处理一般的请求，其它的交给usb_gadget_driver.setup处理。usb_gadget_driver上方定义的文档写道。需要注意的是，当调用这个setup的时，在这个setup里会马上分配request并放入队列。
 
 #3.usb_gadget_driver
 usb_gadget_probe_driver - 注册gadget driver，只有这个函数，目前版本内核切掉了usb_gadget的bind成员，这个函数的第二个参数bind，要写出来。
