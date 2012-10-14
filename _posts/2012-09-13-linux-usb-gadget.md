@@ -38,7 +38,7 @@ dma -
 
 no_interrupt - 
 
-complete - 传输结束时调用的函数。
+complete - 传输结束时调用的函数。传输结束时，调用这个函数前，需要从queue中删除这个usb_request。
 
 context - 可以用来让usb_gadget_driver放一些数据
 
@@ -118,7 +118,7 @@ disable(usb_ep_disable) - 看了名字你就知道。
 
 alloc_request(usb_ep_alloc_request)、free_request(sb_ep_free_request) 简单的分配内存，同时初始化usb_request的list成员。usb_request的buf成员不需要分配。这个由gadget driver分配，见zero的alloc_ep_req函数。
 
-queue(usb_ep_queue) - 刚进队的时候如果能进行数据传输的话就马上进行数据传输，如果不能的话，就只能等到当前传输完成后，在中断中处理了。
+queue(usb_ep_queue) - 刚进队的时候如果能进行数据传输的话就马上进行数据传输，如果不能的话，就只能等到当前传输完成后，在中断中处理了。*当usb_request完成时，需要从这个队列中删除这个usb_request。*还有，在把usb_request放入队列的时候，要初始化usb_request的actual成员和status成员(有见初始化为`-EINPROGRESS`。
 
 dequeue(usb_ep_dequeue) - 以参数ECONNRESET调用完成函数。
 
@@ -271,3 +271,6 @@ usb_gadget_driver的setup处理get/set_descriptor、get/set_configuration、get/
 
 当中断发生时，并且有数据完成(IN_PKT_RDY(发送数据前检测/OUT_PKT_RDY收了数据后检测，就那个ep0_state=DATA_IN/DATA_OUT来确定检测IN/OUT_PKT_RDY)，检测是否有usb_request的actual等length的，然后这个usb_request就可以complete了。
 
+维护一个状态机，USB控制器被复位时，初始化这个状态机为IDLE。根据usb_ctrlrequest显示当前的传输为IN或OUT来使状态机进入DATA_IN或DATA_OUT。然后让USB控制器进入数据阶段。然后处理usb_request(一个控制传输只处理一个usb_request，根据EP0的maxpacket的大小，分批传输数据，每次成功后，增加usb_request的actual的大小为传输的字节数。然后，当usb_request的actual等于length的时候，让USB控制器的状态阶段。同时，使状态机进入IDLE状态，并调用usb_request的complete函数。然后，调用complete前usb_request被从queue中删除。然后下次控制传输时又被入队。
+
+当调用complete后。然后，下一次request来的时候，就修改下buf的内容length。actual的值在usb_ep_ops的queue中被初始化为0。在处理这个usb_request时，并进入数据阶段，不会有新的usb_ctrlrequest过来。然后，队列中，就只有这个usb_request并且只为IN或OUT。
