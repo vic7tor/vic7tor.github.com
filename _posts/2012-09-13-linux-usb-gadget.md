@@ -278,10 +278,16 @@ usb_gadget_driver的setup处理get/set_descriptor、get/set_configuration、get/
 当调用complete后。然后，下一次request来的时候，就修改下buf的内容length。actual的值在usb_ep_ops的queue中被初始化为0。在处理这个usb_request时，并进入数据阶段，不会有新的usb_ctrlrequest过来。然后，队列中，就只有这个usb_request并且只为IN或OUT。
 
 #6.一般端点queue的处理
+##1.第一次
 刚开始，以控制传输的那种队列处理方式来处理一般端点的传输。然后，查看printk的记录，在收到包后，没有调用usb_request的complete，printk的约20个时间单位后，被主机无情的复位了。
 
 先就是按照控制传输的队列处理方式，要把usb_reqeust的actual读成length长度才调用complete。但一般传输与控制传输不一样。一次控制传输的数据量是SETUP事务的那个usb_ctrlrequest给出的。然后，这次控制传输就要传送其指定的数据量。因为控制端点的maxpacket小，所以会有多次数据传输。
 
 而对于一般传输(BULK)就一个IN或OUT事务，并没有SETUP事务来指定长度。并且，其maxpacket主机已经通过端点描述符知道了。主机会传送合法长度的数据。
 
-*说到底，一次传输的完成就需要调用一次usb_request的complete。一次控制传输，包含多次IN或OUT。而一次BULK传输就一次IN或OUT。*
+说到底，一次传输的完成就需要调用一次usb_request的complete。一次控制传输，包含多次IN或OUT。而一次BULK传输就一次IN或OUT。
+
+##2.第二次
+载入gadget模块后，能在linux下显示出盘符了。但是，格式的时候很慢，并且出错。看了下配置完成后的bulk in/out通信。发现主机要out一个0x1000的数据，当发送第一个64节大小的包后，就跟着CSW包了，想想就是当发完第一个包后，调用了usb_request complete后，mass storage gadget就发送那个CSW握手包了。
+
+想想对于所有的传输(控制、BULK等)，只要是传输数据量是确定的，就要把所有数据传完后才能调用usb request的complete函数。控制传输的IN/OUT的数据量都是确定的(setup事务指定的)。bulk in的数据量也是确定的，mass storage就要发送这么多数据，发完了才能调用complete。而对于bulk out，数据量就是可能是不确定的了，所以每收到一个数据就要调用usb request的complete。然后，mass storage gadget这样的东东，如果只收到部分数据，他又会入队一个新的usb_request(好像只是maxpacket的大小)又会把usb request入队。
