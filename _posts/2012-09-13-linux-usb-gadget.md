@@ -290,4 +290,9 @@ usb_gadget_driver的setup处理get/set_descriptor、get/set_configuration、get/
 ##2.第二次
 载入gadget模块后，能在linux下显示出盘符了。但是，格式的时候很慢，并且出错。看了下配置完成后的bulk in/out通信。发现主机要out一个0x1000的数据，当发送第一个64节大小的包后，就跟着CSW包了，想想就是当发完第一个包后，调用了usb_request complete后，mass storage gadget就发送那个CSW握手包了。
 
-想想对于所有的传输(控制、BULK等)，只要是传输数据量是确定的，就要把所有数据传完后才能调用usb request的complete函数。控制传输的IN/OUT的数据量都是确定的(setup事务指定的)。bulk in的数据量也是确定的，mass storage就要发送这么多数据，发完了才能调用complete。而对于bulk out，数据量就是可能是不确定的了，所以每收到一个数据就要调用usb request的complete。然后，mass storage gadget这样的东东，如果只收到部分数据，他又会入队一个新的usb_request(好像只是maxpacket的大小)又会把usb request入队。
+想想对于所有的传输(控制、BULK等)，只要是传输数据量是确定的，就要把所有数据传完后才能调用usb request的complete函数。控制传输的IN/OUT的数据量都是确定的(setup事务指定的)。bulk in的数据量也是确定的，mass storage就要发送这么多数据，发完了才能调用complete。而对于bulk out，数据量就是可能是不确定的了，情况就复杂了。对于bulk only协议的，那个CBW是31字节，buffer长度为64字节，没有完全占buffer，但这个是一定要complete；而对于像buffer长度为4096这样的，非CBW的，只有等到传完了buffer数量的东西才能complete。
+
+so想起s3c2440驱动中那个，检测这次传输的数据量，如果不对齐到maxpacket就认为是传输结束，要调用complete。
+
+还有，对于in或out的complete的调用。不管是in还是out，只要发完了就可以调用complete了，因为不会出意外(有可能被STALL？)，还有发送前会检测对应位是否完成，就算提早complete导致再次入队也会等到发完了才发再次入队的。
+
