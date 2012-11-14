@@ -6,29 +6,29 @@ category:
 tags: []
 ---
 {% include JB/setup %}
-#1.»·¾³°²×°
-ÏÈ×°NDKºÍSDK£¬È»ºó×°eclipseºÍADT¡£ĞÂ°æµÄADTÄÜÊ¶±ğ³öNDKÁË¡£ÔÚeclispeÀïÖ±½Ó¾Í¿ÉÒÔÓÃÁË£¬²»ÓÃ×°Ê²Ã´CYGWIN¡£
+#1.ç¯å¢ƒå®‰è£…
+å…ˆè£…NDKå’ŒSDKï¼Œç„¶åè£…eclipseå’ŒADTã€‚æ–°ç‰ˆçš„ADTèƒ½è¯†åˆ«å‡ºNDKäº†ã€‚åœ¨eclispeé‡Œç›´æ¥å°±å¯ä»¥ç”¨äº†ï¼Œä¸ç”¨è£…ä»€ä¹ˆCYGWINã€‚
 
-#2.Ò»¸öÊµÁĞ
-##1.AndroidÖĞµÄÉùÃ÷
-ÔÚÒªµ÷ÓÃNative³ÌĞòµÄÀàÖĞÒªÓĞÏÂÃæµÄÉùÃ÷£º
+#2.ä¸€ä¸ªå®åˆ—
+##1.Androidä¸­çš„å£°æ˜
+åœ¨è¦è°ƒç”¨Nativeç¨‹åºçš„ç±»ä¸­è¦æœ‰ä¸‹é¢çš„å£°æ˜ï¼š
 
     package com.example.ndk;
 
     public class MainActivity extends Activity {
 
-        public native String getData(); ½öÎªÉùÃ÷
+        public native String getData(); ä»…ä¸ºå£°æ˜
     
         static {
     	    System.loadLibrary("ndk");
         }
     }
-##2.Native CodeµÄÊµÏÖ
-ÓÒ»÷ÏîÄ¿/Android Tools/Add Native Support£¬È»ºóÊäÈëÃû×Ö£¬Ãû×Ö¾ÍÊÇSystem.loadLibrary("ndk")ÖĞµÄndkÕâÑùµÄ¡£
+##2.Native Codeçš„å®ç°
+å³å‡»é¡¹ç›®/Android Tools/Add Native Supportï¼Œç„¶åè¾“å…¥åå­—ï¼Œåå­—å°±æ˜¯System.loadLibrary("ndk")ä¸­çš„ndkè¿™æ ·çš„ã€‚
 
-È»ºó£¬µ±Ç°Ä¿Â¼¾Í»á¶àÒ»¸öjniÎÄ¼ş¼Ğ¡£Í¬Ê±»áÓĞÒ»¸öcppÔ´³ÌĞòºÍAndroid.mk¡£Èç¹ûÅª³ÉCÔ´ÎÄ¼ş£¬ÄÇ¸öNewStringUTFÊ¹ÓÃ»áÓĞ±ğÍâµÄ·½·¨£¬ÔİÊ±²»ÖªµÀÔõÃ´½â¾ö¡£
+ç„¶åï¼Œå½“å‰ç›®å½•å°±ä¼šå¤šä¸€ä¸ªjniæ–‡ä»¶å¤¹ã€‚åŒæ—¶ä¼šæœ‰ä¸€ä¸ªcppæºç¨‹åºå’ŒAndroid.mkã€‚å¦‚æœå¼„æˆCæºæ–‡ä»¶ï¼Œé‚£ä¸ªNewStringUTFä½¿ç”¨ä¼šæœ‰åˆ«å¤–çš„æ–¹æ³•ï¼Œæš‚æ—¶ä¸çŸ¥é“æ€ä¹ˆè§£å†³ã€‚
 
-cppÔ´³ÌĞòÎª£º
+cppæºç¨‹åºä¸ºï¼š
 
     #include <jni.h>
 
@@ -41,15 +41,15 @@ cppÔ´³ÌĞòÎª£º
     	return env->NewStringUTF("Hello c, JNI");
     }
     
-ÒòÎªÊÇcppÎÄ¼ş£¬°ÑÉùÃ÷ÓÃextern°üº¬ÆğÀ´£¬ÔÚÁ´½Ó³É¹¦µÄ.soÎÄ¼şÖĞ£¬µ¼³ö±íÖĞµÄJava_com_example_ndk_MainActivity_getDataÃû×Ö²Å»áÊÇÕâÑù£¬¶ø²»ÊÇÊ¹ÓÃc++ÄÇÑùµÄÌØÊâ»¯µÄÃû×Ö¡£
+å› ä¸ºæ˜¯cppæ–‡ä»¶ï¼ŒæŠŠå£°æ˜ç”¨externåŒ…å«èµ·æ¥ï¼Œåœ¨é“¾æ¥æˆåŠŸçš„.soæ–‡ä»¶ä¸­ï¼Œå¯¼å‡ºè¡¨ä¸­çš„Java_com_example_ndk_MainActivity_getDataåå­—æ‰ä¼šæ˜¯è¿™æ ·ï¼Œè€Œä¸æ˜¯ä½¿ç”¨c++é‚£æ ·çš„ç‰¹æ®ŠåŒ–çš„åå­—ã€‚
 
-¹ØÓÚº¯ÊıÃû×ÖJava_com_example_ndk_MainActivity_getData¡£JavaÊÇ±ØĞëµÄ¡£com_example_ndkÊÇ°üÃû£¬package com.example.ndk¡£MainActivityÊÇÀà¡£getDataÊÇº¯ÊıÃû¡£×¢Òâ´óĞ¡Ğ´¡£
+å…³äºå‡½æ•°åå­—Java_com_example_ndk_MainActivity_getDataã€‚Javaæ˜¯å¿…é¡»çš„ã€‚com_example_ndkæ˜¯åŒ…åï¼Œpackage com.example.ndkã€‚MainActivityæ˜¯ç±»ã€‚getDataæ˜¯å‡½æ•°åã€‚æ³¨æ„å¤§å°å†™ã€‚
 
-º¯ÊıµÄ²ÎÊı£¬Ç°Á½¸ö¶¼ÊÇ¹Ì¶¨µÄ£¬ºóÃæµÄ£¬¸ù¾İJavaÖĞµÄÀàµÄÉùÃ÷ÊÇ·ñÓĞ²ÎÊıÀ´¾ö¶¨¡£
+å‡½æ•°çš„å‚æ•°ï¼Œå‰ä¸¤ä¸ªéƒ½æ˜¯å›ºå®šçš„ï¼Œåé¢çš„ï¼Œæ ¹æ®Javaä¸­çš„ç±»çš„å£°æ˜æ˜¯å¦æœ‰å‚æ•°æ¥å†³å®šã€‚
 
-²Î¿¼ndk¸ùÄ¿Â¼µÄsample¶øÀ´¡£
+å‚è€ƒndkæ ¹ç›®å½•çš„sampleè€Œæ¥ã€‚
 
-¹ØÓÚJAVAÀàĞÍÓëCµÈÀàĞÍÓ³Éä¼ûÏÂÃæ¡£
+å…³äºJAVAç±»å‹ä¸Cç­‰ç±»å‹æ˜ å°„è§ä¸‹é¢ã€‚
 
 Java type	JNI type	C type		Stdint C type
 boolean		Jboolean	unsigned char	uint8_t
@@ -61,12 +61,12 @@ int		jint		Int		int32_t
 long		jlong		long long	int64_t
 short		jshort		Short		int16_t
 
-String²»ÊÇ±ê×¼ÀàĞÍ£¬ËùÒÔÓÃº¯ÊıNewStringUTF´´½¨¡£
+Stringä¸æ˜¯æ ‡å‡†ç±»å‹ï¼Œæ‰€ä»¥ç”¨å‡½æ•°NewStringUTFåˆ›å»ºã€‚
 
-##nativeÖĞÒıÓÃjavaµÄÀà
-ÏñStringÒ²ÊÇÒ»¸öÀà£¬jstringÊÇjobjectµÄtypedef¡£ËùÓĞJavaµÄÀàµ½ÁËnative code¶¼»á³ÉÎªjobjectµÄÀàĞÍ¡£ËùÒÔÔÚnative codeÊµÏÖÖĞ£¬°ÑJavaÀàµÄ²ÎÊı¶¼¸Ä³Éjobject.
+##nativeä¸­å¼•ç”¨javaçš„ç±»
+åƒStringä¹Ÿæ˜¯ä¸€ä¸ªç±»ï¼Œjstringæ˜¯jobjectçš„typedefã€‚æ‰€æœ‰Javaçš„ç±»åˆ°äº†native codeéƒ½ä¼šæˆä¸ºjobjectçš„ç±»å‹ã€‚æ‰€ä»¥åœ¨native codeå®ç°ä¸­ï¼ŒæŠŠJavaç±»çš„å‚æ•°éƒ½æ”¹æˆjobject.
 
-Èç¹û£¬Õâ¸öjavaÀà£¬ÒªÔÚnative codeµÄ±ğµÄµØ·½Ê¹ÓÃ£¬¾ÍÒªµ÷ÓÃNewGlobalRef£º
+å¦‚æœï¼Œè¿™ä¸ªjavaç±»ï¼Œè¦åœ¨native codeçš„åˆ«çš„åœ°æ–¹ä½¿ç”¨ï¼Œå°±è¦è°ƒç”¨NewGlobalRefï¼š
 
     JNIEXPORT void JNICALL Java_com_packtpub_Store_setColor
         (JNIEnv* pEnv, jobject pThis, jstring pKey, jobject pColor) {
@@ -83,33 +83,33 @@ String²»ÊÇ±ê×¼ÀàĞÍ£¬ËùÒÔÓÃº¯ÊıNewStringUTF´´½¨¡£
         }
     }
 
-NewGlobalRefÓëDeleteGlobalRefÊÇ³É¶Ô³öÏÖµÄ¡£µ÷ÓÃNewGlobalRefµÄÔ­ÒòÊÇ·ÀÖ¹JavaµÄÀ¬»øÊÕ¼¯Æ÷¸ÉµôÁËÕâ¸ö¶ÔÏó¡£Èç¹û£¬²»ÔÚ±ğµÄµØ·½Ê¹ÓÃÕâ¸ö¶ÔÏó£¬ÄÇÃ´Äã²»ĞèÒªµ÷ÓÃNewGlobalRef¡£
+NewGlobalRefä¸DeleteGlobalRefæ˜¯æˆå¯¹å‡ºç°çš„ã€‚è°ƒç”¨NewGlobalRefçš„åŸå› æ˜¯é˜²æ­¢Javaçš„åƒåœ¾æ”¶é›†å™¨å¹²æ‰äº†è¿™ä¸ªå¯¹è±¡ã€‚å¦‚æœï¼Œä¸åœ¨åˆ«çš„åœ°æ–¹ä½¿ç”¨è¿™ä¸ªå¯¹è±¡ï¼Œé‚£ä¹ˆä½ ä¸éœ€è¦è°ƒç”¨NewGlobalRefã€‚
 
-##ÔÚnative codeÖĞÅ×³öÒì³£
-Ê×ÏÈÉùÃ÷£º
+##åœ¨native codeä¸­æŠ›å‡ºå¼‚å¸¸
+é¦–å…ˆå£°æ˜ï¼š
 
     public native String getString(String pKey)
         throws NotExistingKeyException, InvalidTypeException;
 
-ÔÚnativeÖĞÅ×³öÒì³££º
+åœ¨nativeä¸­æŠ›å‡ºå¼‚å¸¸ï¼š
 
 	void throwNotExistingKeyException(JNIEnv* pEnv) {
 		jclass lClass = (*pEnv)->FindClass(pEnv,
-			¡°com/packtpub/exception/NotExistingKeyException¡±);
+			â€œcom/packtpub/exception/NotExistingKeyExceptionâ€);
 		if (lClass != NULL) {
-			(*pEnv)->ThrowNew(pEnv, lClass, ¡°Key does not exist.¡±);
+			(*pEnv)->ThrowNew(pEnv, lClass, â€œKey does not exist.â€);
 		}
 		(*pEnv)->DeleteLocalRef(pEnv, lClass);
 	}
 
-##Êı×é
-ÓÃµ½Ê±ÔÙ²é
+##æ•°ç»„
+ç”¨åˆ°æ—¶å†æŸ¥
 
-#ÔÚnative codeÖĞµ÷ÓÃJava´úÂë
-##1.JavaÓënative codeµÄÍ¬²½
-Ò»¸önativeÊµÏÖµÄjavaº¯ÊıÒªÏë´´½¨Ïß³Ì£¬ÔÚÆänative codeµÄÊµÏÖÖĞ£¬Ê¹ÓÃpthread½Ó¿Ú´´½¨Ïß³Ì¾ÍĞĞÁË£¬ÔÚpthreadÔËĞĞµÄº¯ÊıÖĞ£¬ÒªÈ¡µÃJavaVm²¢µ÷ÓÃJavaVm::AttachCurrentThread¡£
+#åœ¨native codeä¸­è°ƒç”¨Javaä»£ç 
+##1.Javaä¸native codeçš„åŒæ­¥
+ä¸€ä¸ªnativeå®ç°çš„javaå‡½æ•°è¦æƒ³åˆ›å»ºçº¿ç¨‹ï¼Œåœ¨å…¶native codeçš„å®ç°ä¸­ï¼Œä½¿ç”¨pthreadæ¥å£åˆ›å»ºçº¿ç¨‹å°±è¡Œäº†ï¼Œåœ¨pthreadè¿è¡Œçš„å‡½æ•°ä¸­ï¼Œè¦å–å¾—JavaVmå¹¶è°ƒç”¨JavaVm::AttachCurrentThreadã€‚
 
-ÔÚÕâ¸öÏß³ÌÖĞ£¬µ÷ÓÃMonitorEnterÒ»¸öjobjectºó£¬synchronizedĞŞÊÎµÄnative¾Í×èÈûÔÚ¶ÔÕâ¸ö¶ÔÏóµÄ·ÃÎÊÉÏ¡£
+åœ¨è¿™ä¸ªçº¿ç¨‹ä¸­ï¼Œè°ƒç”¨MonitorEnterä¸€ä¸ªjobjectåï¼Œsynchronizedä¿®é¥°çš„nativeå°±é˜»å¡åœ¨å¯¹è¿™ä¸ªå¯¹è±¡çš„è®¿é—®ä¸Šã€‚
 
-##2.ÔÚnative codeÖĞµ÷ÓÃjava´úÂë
+##2.åœ¨native codeä¸­è°ƒç”¨javaä»£ç 
 
