@@ -63,7 +63,7 @@ mdev是udev的缩水版，只通过设备名来匹配。那个devicename_regex�
 
 #问题
 ##1.
-panic attemp to kill init那个。
+panic attemp to kill init那个。3.6内核会报errorcode=4的错误。
 
 在那个/etc/init.d/rcS中放了`echo "sss" > /dev/console`发现没有显示。没有运行到这里。然后在网上找，说是EABI问题。
 
@@ -84,4 +84,5 @@ arm-none-linux-gnueabi-objdump -p bin/busybox
 ##2.显示Freeing init memory: 200K后无反应
 uart的startup函数没有被执行。/etc/init.d/rcS中有echo到tty的语句。
 
-
+##3.unable to open an initial console
+主要是根文件系统中没有console、null这两个设备节点。不管是不是使用initramfs。
