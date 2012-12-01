@@ -31,4 +31,12 @@ logcat有下面信息
 
 vi drivers/input/touchscreen/ads7846.c改下这个设备的名字。然后，见http://source.android.com/tech/input/input-device-configuration-files.html。再把/system/usr/idc/DEVICE_NAME.idc改成那个名字就行了。
 
+#4.
+preload什么class的，删除cache应该就没事了。
+
+#--------------------------------------------------------------------
+在上面那些做完，android 4.0.3能正常运行了，但是图形界面很卡。
+
+#ti sgx支持
+
 
