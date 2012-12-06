@@ -38,4 +38,26 @@ push就是`stmfd sp!,`。括号里的寄存器就是会放入到堆栈中的寄�
 
 使用make -p找到CFLAGS赋值的地方。然后，用include/configs/xxx.h中使用宏控制是否开启-mapcs。
 
+开-mapcs堆栈状态:
+
+    /*
+     * Stack frame layout:
+     *             optionally saved caller registers (r4 - r10) 栈顶
+     *             saved fp 指现下面那个位置
+     *             saved sp
+     *             saved lr
+     *    frame => saved pc
+     *             optionally saved arguments (r0 - r3)
+     * saved sp => <next word> 栈底
+     *
+     * Functions start with the following code sequence:
+     *                  mov   ip, sp
+     *                  stmfd sp!, {r0 - r3} (optional) 看了很多都没有这个，所以sub fp, ip, #4中#4这个常量可以用。
+     * corrected pc =>  stmfd sp!, {..., fp, ip, lr, pc}
+     *                  sub     fp, ip, #4 这句是后来补上的
+     */
+
+这个图是实际的图示看那个进栈的汇编指令，看了很多linux内核的反汇编代码，没有r0-r3入栈的东东。然后，fp是入栈前sp-4。然后，下一个fp = 当前fp - 12处保存的东西。
+
+在我在config.mk中加入-mapcs后，make并没有全部重新编译一遍其它C代码，clean后，再编译，-mapcs就起作用了。
 
