@@ -20,3 +20,5 @@ initrd不管叫initrd.gz或者其它名字，它是一个gzip压缩的文件
 直接这样子：
 
     root=/dev/mmcblk0p2 rw rootfstype=ext3 rootdelay=1
+
+经测试，不需要ramfs，在3.0.8的内核，用上面参数，不做别的直接支持了。
