@@ -61,3 +61,10 @@ init.rc中有一句会把/挂载为只读，修改那一句就行了。
 
 #skipping insecure file init.rc
 把其权限设为644就ok了。
+
+#/system/lib/libbinder.so打开/dev/binder权限不足
+找出问题的过程不讲了，就是分析那个backtarce信息。
+
+造成这个问题的原因是ueventd.rc权限问题导致这个文件没有起作用。
+
+
