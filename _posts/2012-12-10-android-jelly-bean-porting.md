@@ -67,4 +67,24 @@ init.rc中有一句会把/挂载为只读，修改那一句就行了。
 
 造成这个问题的原因是ueventd.rc权限问题导致这个文件没有起作用。
 
+#mms-common.jar
+报
 
+    D/dalvikvm( 1751): Unable to stat classpath element '/system/framework/mms-common.jar'
+
+这个是因为init.rc中的export BOOTCLASSPATH里有/system/framework/telephony-common.jar:/system/framework/mms-common.jar造成的。
+
+这个init.rc用的是4.2.1里那个init.rc。
+
+看来，以后还是得用当前版本的init.rc修改才行。不能用别的。
+
+#OPENGL_RENDERER
+先用默认的软件opengl实现试试，但是有下面问题。
+
+这个问题网上说是USE_OPENGL_RENDERER被设置，在framework下grep一下，发现有很多地方引用这个宏。
+
+    E/AndroidRuntime( 1726): java.lang.RuntimeException: eglConfig not initialized
+    E/AndroidRuntime( 1726):        at android.view.HardwareRenderer$GlRenderer.initializeEgl(HardwareRenderer.java:811)
+    E/AndroidRuntime( 1726):        at android.view.HardwareRenderer$GlRenderer.initialize(HardwareRenderer.java:747)
+
+在BoardConfig.mk里把这个宏定义成false吧。
