@@ -26,17 +26,19 @@ i2c_client对应物理上的设备，i2c_driver对应设备驱动，实现功能
 
 这样，i2c_driver中的probe函数就被调用了。
 
-来自instantiating-devices：
+i2c_board_info结构体，template for device creation，这个结构体的成员在i2c_new_device中都被复制到i2c_client里去了。i2c_board_info成员详解可以在这个结构定义处的上方看到。
 
     struct i2c_board_info {
-        char            type[I2C_NAME_SIZE];
-        unsigned short  flags;
-        unsigned short  addr;
-        void            *platform_data;
-        struct dev_archdata     *archdata;
-        struct device_node *of_node;
-        int             irq;
+        char            type[I2C_NAME_SIZE]; //chip type, to initialize i2c_client.name
+        unsigned short  flags; //to initialize i2c_client.flags
+        unsigned short  addr; //stored in i2c_client.addr
+        void            *platform_data; //stored in i2c_client.dev.platform_data
+        struct dev_archdata     *archdata; //copied into i2c_client.dev.archdata
+        struct device_node *of_node; //pointer to OpenFirmware device node
+        int             irq; //stored in i2c_client.irq
     };
+
+来自instantiating-devices：
 
     static struct i2c_board_info sfe4001_hwmon_info = {
         I2C_BOARD_INFO("max6647", 0x4e),

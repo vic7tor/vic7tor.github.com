@@ -88,3 +88,16 @@ init.rc中有一句会把/挂载为只读，修改那一句就行了。
     E/AndroidRuntime( 1726):        at android.view.HardwareRenderer$GlRenderer.initialize(HardwareRenderer.java:747)
 
 在BoardConfig.mk里把这个宏定义成false吧。
+
+#type password to decrypt storage
+
+logcat时发现有一个叫CryptKeeper在动。
+
+packages/apps/Settings/src/com/android/settings/CryptKeeper.java中搜vold.decrypt。在代码中可以看到，vold.decrypt这个属性为空或者另外一个值就直接返回，要不就是后面的输密码的框了。
+
+在init.rc中，设置这个属性会自动创建/data下的目录。
+
+    on property:vold.decrypt=trigger_post_fs_data
+        trigger post-fs-data
+
+#触屏见另外一篇文章了
