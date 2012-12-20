@@ -13,7 +13,7 @@ tags: []
     BOARD_EGL_CFG := device/samsung/tiny210/egl.cfg
     BOARD_USES_HGL := true
     BOARD_USES_OVERLAY := true
-    USE_OPENGL_RENDERER := true
+    USE_OPENGL_RENDERER := true 这个见后面
 
 #不开源的二进制文件
 把下面这些东西放到system/vendor
@@ -79,4 +79,17 @@ ueventd.mini210.rc
 
     D/libEGL  ( 1484): loaded /system/lib/egl/libGLES_android.so
     D/libEGL  ( 1484): loaded /vendor/lib/egl/libEGL_POWERVR_SGX540_120.so
+
+#关于感觉画面粗糙
+USE_OPENGL_RENDERER影响到的地方:
+
+    base/core/jni/Android.mk:22:ifeq ($(USE_OPENGL_RENDERER),true)
+    base/core/jni/Android.mk:23:	LOCAL_CFLAGS += -DUSE_OPENGL_RENDERER
+    base/core/jni/Android.mk:221:ifeq ($(USE_OPENGL_RENDERER),true)
+
+    base/libs/hwui/Android.mk:4:# Only build libhwui when USE_OPENGL_RENDERER is
+    base/libs/hwui/Android.mk:6:ifeq ($(USE_OPENGL_RENDERER),true)
+    base/libs/hwui/Android.mk:42:	LOCAL_CFLAGS += -DUSE_OPENGL_RENDERER -DGL_GLEXT_PROTOTYPES
+
+USE_OPENGL_RENDERER启用后需要hwcomposer？
 
