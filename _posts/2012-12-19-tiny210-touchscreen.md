@@ -91,3 +91,11 @@ tags: []
 每个点后需要SYN_MT_REPORT、SYN_REPORT，最后还要加个SYN_MT_REPORT、SYN_REPORT才会起作用。
 
 上面协议有点不正确，内核中文档Documentation/input/multi-touch-protocol.txt讲这部分。ABS_MT_TOUCH_MAJOR和ABS_MT_TRACKING_ID在内核中不需要。
+
+#
+原来是在收到一个数据包后，用一个循环把所有的点报上去最后用SYN_MT_REPORT和SYN_REPORT结束。在使用时，用键盘输入时，会重复很多次。点击可以正常操作。拖动切换屏幕，无法切换。
+
+后来想到，那个从I2C来的数据，后面会有一个有触点为0的数据包，然后，当触点为0时才用SYN_MT_REPORT和SYN_REPORT把数据报上去，然后就正常了。
+
+那个触点为0的包，用来测试一次单击，拖的事件完成吧。这个应该是通过计算的，以时间等等为那个计算出人一次操作吧。
+
