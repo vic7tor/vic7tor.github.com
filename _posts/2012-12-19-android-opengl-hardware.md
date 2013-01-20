@@ -93,3 +93,7 @@ USE_OPENGL_RENDERER影响到的地方:
 
 USE_OPENGL_RENDERER启用后需要hwcomposer？
 
+遇然开机看到启动到linux内核时的小企鹅，感觉小企鹅也有些粗糙，然后换到官方的系统，看到小企鹅不是粗糙的。看来是LCD控制器的时序参数设置引起的吧。
+
+弄成正确的LCD参数，启动后，感觉就正常了。不关Android的事。
+
