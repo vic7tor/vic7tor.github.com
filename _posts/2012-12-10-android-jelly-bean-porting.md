@@ -101,3 +101,7 @@ packages/apps/Settings/src/com/android/settings/CryptKeeper.java中搜vold.decry
         trigger post-fs-data
 
 #触屏见另外一篇文章了
+
+#libwvm.so
+发现这个库只有默认的音乐播放器使用，播放器什么的不需要。
+

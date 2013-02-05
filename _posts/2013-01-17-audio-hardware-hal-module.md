@@ -214,6 +214,32 @@ devices=2为AUDIO_DEVICE_OUT_SPEAKER，format=1为AUDIO_FORMAT_PCM_16_BIT
 
     get_latency 一个重要的函数。
 
+    write 后面的记录可以看到，有调用一次standby，然后后面就是直接write了，所以，pcm_open在这里面调用。
+
+##write
+1.打开pcm设置一些参数
+
+    out->write_threshold = PLAYBACK_PERIOD_COUNT * LONG_PERIOD_SIZE;
+    out->config.start_threshold = SHORT_PERIOD_SIZE * 2;
+    out->config.avail_min = LONG_PERIOD_SIZE,
+    out->low_power = 1;
+
+    out->pcm = pcm_open(card, port, PCM_OUT | PCM_MMAP, &out->config);
+
+    if (!pcm_is_ready(out->pcm)) {
+        ALOGE("cannot open pcm_out driver: %s", pcm_get_error(out->pcm));
+        pcm_close(out->pcm);
+        adev->active_output = NULL;
+        return -ENOMEM;
+    }
+
+2.写入数据
+
+    pcm_get_htimestamp(out->pcm, (unsigned int *)&kernel_frames, &time_stamp) < 0)
+    先保证内核里的frames不太多，多的话就sleep。
+
+    pcm_mmap_write(out->pcm, (void *)buf, out_frames * frame_size);
+
 ##get_latency与get_buffer_size
 在这里讲下frame period。还没有深入alsa驱动的编程，可以这些东西到了后面需要修正。
 
@@ -265,4 +291,29 @@ I/AudioPolicyService( 1493): Loaded audio policy from LEGACY Audio Policy HAL (a
 V/audio_hw_primary( 1493): out_standby(0x40d5fd80)
 
 
-#4.amixer
+#4.control接口
+tinymix运行后会显示所有的controls。
+
+tinymix用法：
+
+    tinymix ID VALUE[,VALUE] 
+
+把下面的
+
+    36      BOOL    1       Right Output Mixer PCM Playback Switch   On
+
+打开后就出了声音
+
+tinymix会显示三种类型的东西:type num name
+
+type是INT BOOL ENUM
+
+num 是INT型特有的吧。
+
+要设置这些值先用mixer_get_ctl_by_name传入name显示的值，然后获得一个mixer_ctl类型的东西。
+
+然后，mixer_ctl_set_value可以设置BOOL和INT类型的值，num不为1时，第二个参数指定设置的是哪个值。mixer_ctl_set_enum_by_string设置ENUM类型的值。
+
+##关于音量控制
+把设设备音量调到最大就行了，然后，发现，调Android中的音量没有发现有调用HAL中的函数，但是音量的确变了，音量应该放在了音频数据里面。
+

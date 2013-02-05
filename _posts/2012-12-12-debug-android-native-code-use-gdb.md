@@ -52,4 +52,7 @@ gdb的shared命令载入符号。
 在终端上：
 
     运行logcat中显示的那条命令。
+    gdbclient app_process :5039 pid(视情况而定)
+    . build/envsetup.sh后就有gdbclient这条令了。可能要lunch下才能找到符号。
+
 
