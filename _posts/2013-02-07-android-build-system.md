@@ -224,7 +224,71 @@ LOCAL_BUILT_MODULE、LOCAL_INSTALLED_MODULE也是在这个文件中定义的。
     $(call expand-required-modules,user_PACKAGES,$(user_PACKAGES))
     user_PACKAGES := $(call module-installed-files, $(user_PACKAGES))
 
+user_PACKAGES在哪里引用见上面。
+
 ##build/core/product_config.mk
+
+    ifneq ($(strip $(TARGET_BUILD_APPS)),)
+      # An unbundled app build needs only the core product makefiles.
+      $(call import-products,$(call get-product-makefiles,\
+          $(SRC_TARGET_DIR)/product/AndroidProducts.mk))
+    else
+      ifneq ($(CM_BUILD),)
+        $(call import-products, device/*/$(CM_BUILD)/cm.mk)
+      else
+      # Read in all of the product definitions specified by the AndroidProducts.mk
+        # files in the tree.
+        #
+        #TODO: when we start allowing direct pointers to product files,
+        #    guarantee that they're in this list.
+        $(call import-products, $(get-all-product-makefiles))
+      endif
+    endif # TARGET_BUILD_APPS
+
+看到这段代码，我原来总以为会像Android.mk里一样把所有AndroidProducts.mk里定义的PRODUCT_PACKAGES这样的变量+=起来。因为import-products这个函数很难看懂。import-products应该只是定义_nic.PRODUCT这样的变量。
+
+import-products生成了$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PACKAGES)这样的变量，所有的PRODUCT_MAKEFILES指向的文件都会生这样格式的变量。
+
+但是这个文件后面引用的都是$(INTERNAL_PRODUCT)的。
+
+    TARGET_PRODUCT = cm_tiny210
+    INTERNAL_PRODUCT := $(call resolve-short-product-name, $(TARGET_PRODUCT))
+    
+    PRODUCT_BRAND := $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_BRAND))
+    
+import-products并不会对PRODUCT_PACKAGES这样的变量造成影响。真正对import-products造成影响的是inherit-product
+
+上面这句话似乎不是十分正确。inherit-product似乎是在import-products执行的，只有研究下import-nodes才能下定论了。见后面的分析。
+
+##core/main.mk
+user_PACKAGES := $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PACKAGES)
+
+##inherit-product
+
+    define inherit-product
+      $(foreach v,$(_product_var_list), \
+          $(eval $(v) := $($(v)) $(INHERIT_TAG)$(strip $(1)))) \
+      $(eval inherit_var := \
+          PRODUCTS.$(strip $(word 1,$(_include_stack))).INHERITS_FROM) \
+      $(eval $(inherit_var) := $(sort $($(inherit_var)) $(strip $(1)))) \
+      $(eval inherit_var:=) \
+      $(eval ALL_PRODUCTS := $(sort $(ALL_PRODUCTS) $(word 1,$(_include_stack))))
+    endef
+
+ALL_PRODUCTS就存着所有inherit-product的文件。
+
+##import-products
+
+非常复杂的一个函数，画了个图来分析。分析过太花脑力了。是在这个函数中include inherit-product那些文件的。
+
+这个函数的实现机制就不详细讲了，太长了。
+
+##关于cm编译少文件的原因
+import-products分析到其中一个函数时，想看变量内容。最后找到了warning这个函数用来显示变量的值。
+
+显示变量的值时就看那个PRODUCT_COYP_FILES，inherit-product(会在变量中加INHERIT_TAG)完全没有启作用，最后才让我看到了PRODUCT_COPY_FILES是用`:=`赋值的。
+
+所以，`在inherit-product之后使用PRODUCT_COPY_FILES这些变量时就不能用:=了`不然就覆盖了inherit-product的值。
 
 #PRODUCT_COPY_FILES
 
