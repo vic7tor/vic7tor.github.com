@@ -37,6 +37,47 @@ droidcore的先决条件是droidcore和dist_files(看了下这个没有作用）
 
 所以一切都简单了。
 
+    systemimage_intermediates := \
+        $(call intermediates-dir-for,PACKAGING,systemimage)
+    BUILT_SYSTEMIMAGE := $(systemimage_intermediates)/system.img
+    
+    # $(1): output file
+    define build-systemimage-target
+      @echo "Target system fs image: $(1)"
+      @mkdir -p $(dir $(1)) $(systemimage_intermediates) && rm -rf $(systemimage_intermediates)/system_image_info.txt
+      $(call generate-userimage-prop-dictionary, $(systemimage_intermediates)/system_image_info.txt)
+      $(hide) PATH=$(foreach p,$(INTERNAL_USERIMAGES_BINARY_PATHS),$(p):)$$PATH \
+          ./build/tools/releasetools/build_image.py \
+          $(TARGET_OUT) $(systemimage_intermediates)/system_image_info.txt $(1)
+    endef
+    
+    $(BUILT_SYSTEMIMAGE): $(FULL_SYSTEMIMAGE_DEPS) $(INSTALLED_FILES_FILE)
+        $(call build-systemimage-target,$@)
+
+###img类型生成
+generate-userimage-prop-dictionary生成的东东传给build_image.py
+
+    define generate-userimage-prop-dictionary
+    $(if $(INTERNAL_USERIMAGES_EXT_VARIANT),$(hide) echo "fs_type=$(INTERNAL_USERIMAGES_EXT_VARIANT)" >> $(1))
+    $(if $(BOARD_SYSTEMIMAGE_PARTITION_SIZE),$(hide) echo "system_size=$(BOARD_SYSTEMIMAGE_PARTITION_SIZE)" >> $(1))
+    $(if $(BOARD_USERDATAIMAGE_PARTITION_SIZE),$(hide) echo "userdata_size=$(BOARD_USERDATAIMAGE_PARTITION_SIZE)" >> $(1))
+    $(if $(BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE),$(hide) echo "cache_fs_type=$(BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE)" >> $(1))
+    $(if $(BOARD_CACHEIMAGE_PARTITION_SIZE),$(hide) echo "cache_size=$(BOARD_CACHEIMAGE_PARTITION_SIZE)" >> $(1))
+    $(if $(INTERNAL_USERIMAGES_SPARSE_EXT_FLAG),$(hide) echo "extfs_sparse_flag=$(INTERNAL_USERIMAGES_SPARSE_EXT_FLAG)" >> $(1))
+    $(if $(mkyaffs2_extra_flags),$(hide) echo "mkyaffs2_extra_flags=$(mkyaffs2_extra_flags)" >> $(1))
+    $(if $(filter true, $(strip $(HAVE_SELINUX))), echo "selinux_fc=$(TARGET_ROOT_OUT)/file_contexts" >> $(1))
+    endef
+    
+    INTERNAL_USERIMAGES_EXT_VARIANT :=
+    ifeq ($(TARGET_USERIMAGES_USE_EXT2),true)
+    INTERNAL_USERIMAGES_USE_EXT := true
+    INTERNAL_USERIMAGES_EXT_VARIANT := ext2
+    else
+    ifeq ($(TARGET_USERIMAGES_USE_EXT3),true)
+    INTERNAL_USERIMAGES_USE_EXT := true
+    INTERNAL_USERIMAGES_EXT_VARIANT := ext3
+
+
 ##files
 
     .PHONY: files
