@@ -56,27 +56,14 @@ android访问硬件除HAL之外，也有直接访问dev、sys接口的。framewo
 
 hardware/libhardware/include/hardware/hardware.h:
 
-    #define HAL_MODULE_INFO_SYM         HMI
+##HAL_MODULE_INFO_SYM
+hw_get_module
 
-device/samsung/tuna/power/power_tuna.c:
+##hw_module_t
 
-    struct tuna_power_module {
-        struct power_module base;
-        pthread_mutex_t lock;
-        int boostpulse_fd;
-        int boostpulse_warned;
-    }; 这个又继承了power_module
+##hw_device_t
 
-
-   struct tuna_power_module HAL_MODULE_INFO_SYM = {
-    base: {
-        common: {
-            tag: HARDWARE_MODULE_TAG,
-            module_api_version: POWER_MODULE_API_VERSION_0_2,
-            hal_api_version: HARDWARE_HAL_API_VERSION,
-            id: POWER_HARDWARE_MODULE_ID,
-
-##2.头文件
+#各种HAL
 在hardware/libhardware/include/hardware/目录下有这些文件：
 
     audio_effect.h     camera.h           hwcomposer_defs.h  nfc.h
@@ -87,7 +74,17 @@ device/samsung/tuna/power/power_tuna.c:
 
 每个头文件里面都有详细的文档。描述结构体成员的作用。
 
-实现HAL实现在这个文件中定义的那些方法。
 
-使用HAL的模块也包含这个文件，然后用hw_get_module得到hw_module_t后就可以用了。
+#实现HAL
+实现继承hw_module_t的结构体。
+
+实现继承hw_device_t的结构体。
+
+#使用HAL
+包含HAL头文件，然后用hw_get_module(XXX_HARDWARE_MODULE_ID)得到继承hw_module_t的结构体。
+
+调用xxx_open(调用module->methods->open)获得继承hw_device_t的结构体。
+
+调用hw_device_t中的函数来操作设备。
+
 

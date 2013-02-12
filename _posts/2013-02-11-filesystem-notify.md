@@ -66,3 +66,6 @@ fd不是wd。
 ##select poll
 可以用select poll fd。
 
+#sysfs
+本来重力感应的HAL想用inotify sysfs的接口实现的，然后发现，inotify对内核的读写没有反应，对用户态cat sysfs的文件才有用。
+
