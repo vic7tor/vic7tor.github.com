@@ -40,7 +40,9 @@ tags: []
 gdb的shared命令载入符号。
 
 #2.高级方法
-##1.setprop debug.db.uid
+##让设备可调试
+
+1.setprop debug.db.uid
 运行这条命令：
 
     adb shell setprop debug.db.uid 10000
@@ -49,10 +51,19 @@ gdb的shared命令载入符号。
 
 设置这个属性后，pid小于10000的程序挂掉后（应该是会显示那个backtrace信息那种)，整个系统就会暂停，后面的服务不会运行。但是，shell还能执行命令。
 
-在终端上：
+2.按gdbclient提示手动运行gdbserver
+
+##gdbclient
+
+对于第一次情况
 
     运行logcat中显示的那条命令。
     gdbclient app_process :5039 pid(视情况而定)
     . build/envsetup.sh后就有gdbclient这条令了。可能要lunch下才能找到符号。
 
+对于第二种情况
+
+    运行gdbclient有提示
+
+在现在版本调用的那个GDB是64位的，所以要装64位的库。
 
