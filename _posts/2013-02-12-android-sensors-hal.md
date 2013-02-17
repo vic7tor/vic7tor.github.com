@@ -29,7 +29,7 @@ get_sensors_list返回值为sensor_t的个数。list返回sensor_t数组。
         float           maxRange;　最大值
         float           resolution;　精度
         float           power;　mA表示的烧电量
-        int32_t         minDelay;　两次数据以mS为间隔，为0的话表示设备不以固定速率上报值，仅当有新值时才上报。
+        int32_t         minDelay;　两次数据以mS为间隔，为0的话表示设备不以固定速率上报值，仅当有新值时才上报。为一个值时，在Android上层不是等这么久才调用poll函数的，SensorService里可以看到，所以在poll函数中可能需要休眠。
         void*           reserved[8];
     };
 
@@ -106,6 +106,8 @@ poll 返回数据。返回值为数据的个数，这么说就可以少于count�
     } sensors_event_t;
 
 根据传感器类型填充union中的值。
+
+timestamp用gettimeofday再把那个结构转为ns就行了。
 
 #sensors_vec_t
 
