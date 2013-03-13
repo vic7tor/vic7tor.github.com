@@ -25,4 +25,16 @@ GpsCallbacks是上层传过来的。
 因为与上层是交互是在另一个线程里实现的。所以当要start、stop这个工作线程时，qemu的那个实现是使用socket的。
 
 #其它细节
+##GpsLocation
+GpsLocation由GPGGA和GPRMC解析出来。
 
+##GpsSvStatus
+GpsSvStatus的sv_list、almanac_mask、ephemeris_mask(只要在GPGSV里出现了的都弄上掩码)由GPGSV解析出来。
+
+used_in_fix_mask由GPGSA解析出来。
+
+填充这些mask时是根据其上报的PRN(伪随机噪声码，又有说法卫星序号)决定。
+
+在Android的qemu的那个GPS HAL里已经有NMEA的解析函数。
+
+开发解析GPGSV和GPGSA的数据时都是在其基础上开发。
