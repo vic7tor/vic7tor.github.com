@@ -100,4 +100,6 @@ LDD3里scull_p_poll里的：
 
 这个if语句是必要的，ep_send_events_proc里调用的file_operations的poll才会有用。
 
+#一次实战中的问题
+感觉epoll没有起作用，上层(改的qemu_gps)一直在那里读。后来发现，上层是用一个无穷循环来读，只有当返回值小于0时才break，而在驱动中的实现，没有数据读时返回0，这样导致了上层一直来读，这样就看起来epoll没有起作用。
 
