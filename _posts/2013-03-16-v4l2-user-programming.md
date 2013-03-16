@@ -68,14 +68,48 @@ struct v4l2_buffer
 
 index、type、memory这三个值都需要设置？
 
-###3.入队缓冲区 - VIDIOC_QBUF
+在m成员中offset(文件中的偏移,打印了下这个值是0)是对应V4L2_MEMORY_MMAP，见v4l2_buffer上方注释。
+
+length为buffer的大小。
+
+###3.mmap
+
+    void *mmap(void *addr, size_t length, int prot, int flags,
+                  int fd, off_t offset)
+
+addr指定映射到用户态的地址。length为映射的长度了，prot设置PROT_READ、PROT_WRITE、PROT_EXEC这样的权根。
+
+flags有MAP_SHARED和MAP_PRIVATE这些还有其它的。
+
+fd就不需要说了。
+
+offset从哪里开始映射。v4l2_buffer.m.offset了。
+
+###.入队缓冲区 - VIDIOC_QBUF
+
+入队VIDIOC_QUERYBUF返回的v4l2_buffer就行了。
+
+或者设置type、memory、index入队。
+
+###出队缓冲区 - VIDIOC_DQBUF
+
+设置type和memory。index为返回值。
 
 ##图像获取
 当入队缓冲区后，VIDIOC_STREAMON就开始了捕获视频。
 
-有的人用select判断有没有buffer可以读。有数据时，用VIDIOC_DQBUF出队，出队时不用指定是哪个缓冲区。
+有的人用select判断有没有buffer可以读。有数据时，用VIDIOC_DQBUF出队，出队时不用指定是哪个缓冲区。buffer出队之后就开始读，出队之后就不会改变buffer内容了吧。
 
 读完数据后再入队。
+
+###VIDIOC_STREAMON
+
+    #define VIDIOC_STREAMON          _IOW('V', 18, int)
+
+网上说这个int是一个指向enum v4l2_buf_type的指针。
+
+    type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    ioctl(fd, VIDIOC_STREAMON, &type)
 
 #内核的ioctl实现。
 
