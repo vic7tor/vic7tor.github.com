@@ -44,6 +44,8 @@ i2c_board_info结构体，template for device creation，这个结构体的成�
         I2C_BOARD_INFO("max6647", 0x4e),
     };
 
+    I2C_BOARD_INFO只指定i2c_board_info里的type和addr成员，其它成员像platform_data可以直接用名字跟在I2C_BOARD_INFO后面指定。
+
     #define I2C_BOARD_INFO(dev_type, dev_addr) \
         .type = dev_type, .addr = (dev_addr)
 
@@ -56,11 +58,19 @@ i2c_register_board_info第一个参数指定是哪个i2c_adapter。
 
 来自writing-clients：
 
+    struct i2c_device_id {
+        char name[I2C_NAME_SIZE];
+        kernel_ulong_t driver_data      /* Data private to the driver */
+                        __attribute__((aligned(sizeof(kernel_ulong_t))));
+    };
+
     static struct i2c_device_id foo_idtable[] = {
         { "foo", my_id_for_foo },
         { "bar", my_id_for_bar },
         { }
     };
+
+    在i2c的probe函数i2c_device_id会传进来，i2c_device_id的第二个参数作为传给probe的数据，放序号放指针都行。
 
     MODULE_DEVICE_TABLE(i2c, foo_idtable);
 
