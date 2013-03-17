@@ -36,6 +36,12 @@ struct v4l2_format
 
 v4l2_pix_format的pixelformat的生成见v4l2_fourcc。V4L2_PIX_FMT_XXX这样的宏。
 
+    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    fmt.fmt.pix.width = 640;
+    fmt.fmt.pix.height = 480;
+    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+    ioctl(fd, VIDIOC_S_FMT, &fmt)
+
 #图像采集
 如果没有pixformat需不需要设置？
 ##缓冲区管理
@@ -110,6 +116,23 @@ offset从哪里开始映射。v4l2_buffer.m.offset了。
 
     type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     ioctl(fd, VIDIOC_STREAMON, &type)
+
+#v4l2编程实战
+epoll是可以来检测是否有捕获到帧的。
+
+就算只入队一个v4l2_buffer也是可以捕获的。
+
+读/dev/videoX设备节点的会返回-1，但是读v4l2_buffer中大小的字节数，虽然返回-1但是读到的数据是正确的。
+
+使用YUYV的格式时，老是搞不定，后面在网上找到一个程序，试了下，它的能工作。然后，用我的来试成功了，主要是网上程序把格式弄成MJPG。
+
+这说明我那个程序没有问题，YUYV转换RGB时出了问题。
+
+用mplay播放出来了抓了很多次的视频。
+
+    mplayer -demuxer rawvideo -rawvideo w=640:h=480:format=yuy2 ../abc.yuyv
+
+    mplayer -rawvideo format=help 显示所有支持的格式
 
 #内核的ioctl实现。
 
