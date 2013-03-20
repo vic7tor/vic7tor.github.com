@@ -42,6 +42,19 @@ v4l2_pix_format的pixelformat的生成见v4l2_fourcc。V4L2_PIX_FMT_XXX这样的
     fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
     ioctl(fd, VIDIOC_S_FMT, &fmt)
 
+mplane的参数：
+
+        memset(&fmt, 0x00, sizeof(struct v4l2_format));
+        fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+        fmt.fmt.pix_mp.width = 640;
+        fmt.fmt.pix_mp.height = 480;
+        fmt.fmt.pix_mp.field = V4L2_FIELD_NONE;
+        fmt.fmt.pix_mp.pixelformat = V4L2_PIX_FMT_NV21;
+        fmt.fmt.pix_mp.num_planes = 2;
+        ioctl(fd, VIDIOC_S_FMT, &fmt);
+
+只要参数设置正确，G_FMT的时候肯定能打印出来的。
+
 #图像采集
 如果没有pixformat需不需要设置？
 ##缓冲区管理
@@ -72,11 +85,25 @@ V4L2_MEMORY_USERPTR这个不太清楚，猜测是内核不需要分区内存，�
 
 struct v4l2_buffer
 
-index、type、memory这三个值都需要设置？
+    index
+    type
+    memory
+    union {
+                __u32           offset;
+                unsigned long   userptr;
+                struct v4l2_plane *planes;
+    } m;
+    length
 
-在m成员中offset(文件中的偏移,打印了下这个值是0)是对应V4L2_MEMORY_MMAP，见v4l2_buffer上方注释。
+index指定buffer的序号。
 
-length为buffer的大小。
+type必须指定的。V4L2_BUF_TYPE_VIDEO_CAPTURE、V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE。
+
+memory内存类型。V4L2_MEMORY_MMAP、V4L2_MEMORY_USERPTR。
+
+m联合体，当type为V4L2_MEMORY_MMAP时，offset有意义。当不是type不是multiplane时，同时memory是V4L2_MEMORY_USERPTR，userptr是有效的。当type是multiplane时，memory为V4L2_MEMORY_USERPTR或V4L2_MEMORY_MMAP，此时planes有效，同时length指定planes有几个有效数据。planes成员怎么起作用(V4L2_MEMORY_USERPTR、V4L2_MEMORY_MMAP)见下面。
+
+上面对v4l2_buffer解释或许不应该放在这个位置，当V4L2_MEMORY_USERPTR时，那些userptr或者v4l2_plane里的指针都来自用户态已经分配的内存。所以，V4L2_MEMORY_USERPTR没有必要调用VIDIOC_QUERYBUF。只有当为V4L2_MEMORY_MMAP时有必要获得mmap的信息。
 
 ###3.mmap
 
@@ -97,9 +124,52 @@ offset从哪里开始映射。v4l2_buffer.m.offset了。
 
 或者设置type、memory、index入队。
 
+一般的好搞定。如果是mplane和userptr的话。
+
+    struct v4l2_buffer buffer;
+    memset(&buffer, 0, sizeof(buffer));
+    buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+    buffer.memory = V4L2_MEMORY_USERPTR;
+    buffer.index = idx;
+    buffer.m.planes = &(stream->frame.frame[idx].planes[0]);
+    buffer.length = stream->frame.frame[idx].num_planes;
+    buffer.length是VIDIOC_S_FMT里面指定了的
+
+    struct v4l2_plane {
+        __u32                   bytesused;
+        __u32                   length;
+        union {
+                __u32           mem_offset;
+                unsigned long   userptr;
+        } m;
+        __u32                   data_offset;
+        __u32                   reserved[11];
+    };
+
+入队时，那个buffer.m.planes也就是v4l2_plane的几个成员都要设置。
+
+v4l2_plane的成员的设置。
+
+    bytesused - VIDIOC_DQBUF有用的吧，已用的数量
+    length - buffer大小，VIDIOC_QBUF时指定的
+    m.mem_offset - V4L2_MEMORY_MMAP时候使用的。
+    m.userptr - V4L2_MEMORY_USERPTR时用的，指定用户空间buffer的地址。
+    data_offset - 通常为0，如果你要定制头部的话，可以设置这个。
+
 ###出队缓冲区 - VIDIOC_DQBUF
 
 设置type和memory。index为返回值。
+
+如果是mplane
+
+    struct v4l2_buffer vb;
+    struct v4l2_plane planes[VIDEO_MAX_PLANES];
+    memset(&vb,  0,  sizeof(vb));
+    vb.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+    vb.memory = V4L2_MEMORY_USERPTR;
+    vb.m.planes = &planes[0];
+    vb.length = stream->fmt.fmt.pix_mp.num_planes;
+
 
 ##图像获取
 当入队缓冲区后，VIDIOC_STREAMON就开始了捕获视频。
