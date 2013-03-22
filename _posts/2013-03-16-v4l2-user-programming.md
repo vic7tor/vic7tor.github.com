@@ -103,6 +103,8 @@ memory内存类型。V4L2_MEMORY_MMAP、V4L2_MEMORY_USERPTR。
 
 m联合体，当type为V4L2_MEMORY_MMAP时，offset有意义。当不是type不是multiplane时，同时memory是V4L2_MEMORY_USERPTR，userptr是有效的。当type是multiplane时，memory为V4L2_MEMORY_USERPTR或V4L2_MEMORY_MMAP，此时planes有效，同时length指定planes有几个有效数据。planes成员怎么起作用(V4L2_MEMORY_USERPTR、V4L2_MEMORY_MMAP)见下面。
 
+planes是个指针，有次崩溃了，在内核里找不到，然后在logcat里看到了崩溃信息，就是因为这个指针没有赋值就用了。
+
 上面对v4l2_buffer解释或许不应该放在这个位置，当V4L2_MEMORY_USERPTR时，那些userptr或者v4l2_plane里的指针都来自用户态已经分配的内存。所以，V4L2_MEMORY_USERPTR没有必要调用VIDIOC_QUERYBUF。只有当为V4L2_MEMORY_MMAP时有必要获得mmap的信息。
 
 ###3.mmap
