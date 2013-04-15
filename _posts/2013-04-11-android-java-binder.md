@@ -43,7 +43,7 @@ package 会在java文件中生成这一句。
     public class Account implements Parcelable {
     ...
     public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(name);
+        dest.writeString(name);
         dest.writeString(type);
     }
     ...
