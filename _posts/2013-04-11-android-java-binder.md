@@ -84,3 +84,9 @@ Stub是aidl文件生成的Java文件中的，在Stub的onTransact中，调用子
 
 这个IBinder到底是native中的Bn还是Bp,应该是Bp吧。
 
+#1.如果要返回自定义类型的对象的话
+
+    void getNode(in int i, Node node);
+    这样的声明没用，调用后，ndoe全是0。
+    Node getNode(in int i);
+    这样才行
