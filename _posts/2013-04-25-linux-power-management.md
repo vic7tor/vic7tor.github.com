@@ -1,0 +1,73 @@
+---
+layout: post
+title: "linux power management"
+description: ""
+category: 
+tags: [workqueue]
+---
+{% include JB/setup %}
+#1.
+kernel/power/
+
+
+##1.kernel/power/main.c
+这里实现用户态的接口，有一份文档在Documentation/power/interface.txt
+
+    core_initcall(pm_init);
+
+pm_init:
+
+     power_kobj = kobject_create_and_add("power", NULL);
+
+这个就是sysfs的power目录。
+
+state文件：
+
+    power_attr(state);
+    
+state_store就是处理往state文件写入信息的函数。
+
+写入disk时交给hibernate()处理，在kernel/power/hibernate.c中。
+
+如果不是hibernate，那就是suspend的处理了。
+
+earlysuspend一共有on,standby,mem几种状态。非earlysuspend没有on这个状态。
+
+earlysuspend的实现在kernel/power/earlysuspend.c中。
+
+##1.earlysuspend的实现
+看kernel/power/earlysuspend.c，earlysuspend是一种非常简单的机制。搞不明白为什么叫earlysuspend。
+
+    struct early_suspend {
+    #ifdef CONFIG_HAS_EARLYSUSPEND
+        struct list_head link;
+        int level;
+        void (*suspend)(struct early_suspend *h);
+        void (*resume)(struct early_suspend *h);
+    #endif
+    };
+
+register_early_suspend就把early_suspend放到一个根据level排序的list里面。
+
+如果支持early_suspend的话state_store就调用到这个文件中实现的request_suspend_state。
+
+在request_suspend_state里用了workqueue机制。用它的原因是，能让写入sysfs state文件的操作马上返回。workqueue运行于进程上下文。
+
+然后就是遍历链表，执行early_suspend的suspend函数指针。
+
+##2.earlysuspend实例
+drivers/input/misc/ltr502.c
+
+    ltr502->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN;
+    ltr502->early_suspend.suspend = ltr502_early_suspend;
+    ltr502->early_suspend.resume = ltr502_late_resume;
+    register_early_suspend(&ltr502->early_suspend);
+
+在ltr502_early_suspend让设备进入低功耗模式了。
+
+#2.suspend实现
+在kernel/power/suspend.c这个是PC机用的吧，实现起来就复杂了很多。earlysuspend就那么样就完了，估计这个还会和driver/base/power有关系。
+
+
+#drivers/power/
+drivers/power并不是电源管理的部分，而是power supply class。
