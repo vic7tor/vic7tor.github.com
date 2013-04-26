@@ -68,6 +68,9 @@ drivers/input/misc/ltr502.c
 #2.suspend实现
 在kernel/power/suspend.c这个是PC机用的吧，实现起来就复杂了很多。earlysuspend就那么样就完了，估计这个还会和driver/base/power有关系。
 
+公司那个一个按键就让linux休眠其实就是使用的这个机制，因为earlysuspend只支持简单的suspend和resume，让部分设备进入休眠状态，不会像suspend把cpu关掉只留下内存的供电。公司做的驱动没弄到内核里面，没有源代码，通过内核日志可以确定是调用enter_state来进行休眠的。
+
+
 
 #drivers/power/
 drivers/power并不是电源管理的部分，而是power supply class。
