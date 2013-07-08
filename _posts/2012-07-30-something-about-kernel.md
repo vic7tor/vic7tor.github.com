@@ -29,3 +29,42 @@ tags: []
 
 #3.request_irq的dev_id参数
 这个参数还用来识别共享中断时，不同的action。见free_irq的实现。
+
+#内核参数loglevel
+这个可以控制printk，小于这个级别的都可以在用户态上显示。
+
+#is not clean, please run make mrproper
+
+    prepare3: include/config/kernel.release
+    ifneq ($(KBUILD_SRC),)
+        @$(kecho) '  Using $(srctree) as source for kernel'
+        $(Q)if [ -f $(srctree)/.config -o -d $(srctree)/include/config ]; then \
+                echo "  $(srctree) is not clean, please run 'make mrproper'";\
+                echo "  in the '$(srctree)' directory.";\
+                /bin/false; \
+        fi;
+    endif
+
+上面代码中KBUILD_SRC不为空就会执行下面那些，当在命令行编译内核时(编译内核才会做这些检查)，使用了O=xxx参数，那么KBUILD_SRC就不为空。
+
+AndroidKernel.mk内核编译文件，一般在内核源代码树中。
+
+#内核的clean
+    ###
+    # Cleaning is done on three levels.
+    # make clean     Delete most generated files
+    #                Leave enough to build external modules
+    # make mrproper  Delete the current configuration, and all generated files
+    # make distclean Remove editor backup files, patch leftover files and the like
+    
+    # Directories & files removed with 'make clean'
+    CLEAN_DIRS  += $(MODVERDIR)
+    CLEAN_FILES +=  vmlinux System.map \
+                    .tmp_kallsyms* .tmp_version .tmp_vmlinux* .tmp_System.map
+    
+    # Directories & files removed with 'make mrproper'
+    MRPROPER_DIRS  += include/config usr/include include/generated          \
+                      arch/*/include/generated
+    MRPROPER_FILES += .config .config.old .version .old_version             \
+                      include/linux/version.h                               \
+                      Module.symvers tags TAGS cscope* GPATH GTAGS GRTAGS GSYMS

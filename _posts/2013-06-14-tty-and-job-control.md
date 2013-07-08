@@ -71,3 +71,6 @@ open_console的console_name可能就是上面被替换的。
 
 在android里如果报androidboot.console没有的话就可以传内核参数androidboot.console=ttyXXX。
 
+这个初始化控制终端的事就是init fork出来的子进程初始化的。像android的sh(externel/mksh)，它只是打开/dev/tty来进行控制。
+
+
