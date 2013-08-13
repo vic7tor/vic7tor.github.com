@@ -35,7 +35,7 @@ state_store就是处理往state文件写入信息的函数。
 
 earlysuspend一共有on,standby,mem几种状态。非earlysuspend没有on这个状态。
 
-earlysuspend的实现在kernel/power/earlysuspend.c中。
+earlysuspend的实现在kernel/power/earlysuspend.c中。early_suspend同样会休眠到内存。在request_suspend_state最终会跑到wake_unlock的函数，这个函数有个suspend的work_queue最终也会调用pm_suspend。
 
 ##1.earlysuspend的实现
 看kernel/power/earlysuspend.c，earlysuspend是一种非常简单的机制。搞不明白为什么叫earlysuspend。

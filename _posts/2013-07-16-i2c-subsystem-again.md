@@ -1,0 +1,64 @@
+---
+layout: post
+title: "i2c subsystem again"
+description: ""
+category: 
+tags: []
+---
+{% include JB/setup %}
+工作中才接解到i2c，这是第二次研究i2c了。
+
+#i2c总结物理上的结构
+i2c从设备、i2c控制器
+
+#i2c子系统中几大结构体
+这些结构都定义在include/linux/i2c.h这个文件中
+##1.i2c_board_info
+这个结构体记录i2c从设备的地址，以及向i2c_driver传递自定义数据结构platform_data等。
+
+type与用来与i2c_driver配对的字符串。
+
+##i2c_devinfo
+这个结构体包含一个i2c_board_info，和一个记录这个设备所在总线的编号busnum。这个busnum用来查找对应的i2c_adapter。
+
+##i2c_client
+这个代表一个i2c从设备。在i2c_new_device中，i2c_board_info中的成员被复制到这个结构体中来了。
+
+##i2c_adapter
+这个代表一个i2c总线。i2c数据传输函数都需要i2c_adapter这个函数。
+
+##i2c_driver
+完成特定功能的i2c驱动。摄像头、触屏这样的。
+
+#i2c核心对这些数据结构的处理过程
+##i2c_register_board_info
+这个函数参数是一个busnum，和一个i2c_board_info的指针，可以有这个总线上多个i2c_board_info。这个函数把i2c_board_info转换为i2c_devinfo放在__i2c_board_list这个链表中。同时更新一个变量__i2c_first_dynamic_bus_num=busnum+1;
+
+##i2c_register_adapter
+这个函数向i2c核心注册i2c_adapter结构。
+
+这个函数出现了i2c_driver被probe的两种方式。
+
+第一种，当当前注册i2c_adapter.nr小于__i2c_first_dynamic_bus_num，就会调用i2c_scan_static_board_info这个函数来处理放在__i2c_board_list的i2c_devinfo，将遍历链表上所有的i2c_devinfo，如果当前使用i2c_register_adapter注册的i2c_adpater.nr与i2c_devinfo.busnum相同则完成了i2c_adapter的查找。
+
+前面说过所有的i2c通信函数都需要i2c_adapter，找到i2c_adapter之后，就会调用i2c_new_device来创建i2c_client，并通过一系列机制使i2c_driver的probe会被调用。
+
+第二种，__process_new_adapter，这个函数需要i2c_driver设置address_list和detect这两个成员。__process_new_adapter的做法是，遍历系统中所有的i2c_driver，然后，再遍历i2c_driver的address_list，构造一个临时i2c_client，设置其i2c_adapter为当前i2c_register_adapter注册的i2c_adapter。然后，这个临时的i2c_client会传给i2c_driver的detect。然后就是重点了，这个detect用来干嘛。
+
+在第二种方式中，并不像i2c_devinfo指定了确定的i2c_adapter。然后，对于每个i2c_register_adapter注册的i2c_adapter都要遍历一遍系统中所有的i2c_driver，然后对一个特定的i2c_driver，每个i2c_adapter注册时都会调用一遍detect。这个detect就需要这样实现，用那个临时i2c_client传来的i2c_adapter与i2c从设备进行通信。来确定这个i2c总线这个地址上是不是我们那个设备，一个i2c从设备一般有鉴别方法的，比如说，一个寄存器的值是多少多少。如果发现i2c从设备在这个i2c_adapter上面的话，那么就成功完成i2c_adapter查找了。
+
+##i2c_new_device
+这个函数分配一个i2c_client，把一些i2c_board_info的成员复制到i2c_client。最后调用了device_register。在device_register里发生了很多事情。i2c_bus_type的match(i2c_device_match)后面调用的i2c_match_id指示了i2c_client的name与i2c_driver的i2c_device_id的name匹配后就完成了配对。
+
+然后，i2c_bus_type的probe(i2c_device_probe)就会调用i2c_driver的probe函数了。
+
+##i2c_register_adapter
+内核中有两个地方调用i2c_register_adapter，第一个是i2c_add_adapter，这个用来注册不介意i2c busnum的i2c_adapter。另一个是，i2c_add_numbered_adapter。这个i2c_adapter的nr就随这个函数了。
+
+#i2c_adapter驱动
+在drivers/i2c/busses/就是各种i2c_adapter的驱动了。这些驱动的使能都是用platform机制。
+
+##i2c-gpio
+drivers/i2c/busses/i2c-gpio.c这个就是gpio模拟i2c了。
+
+i2c_adapter的nr来自于platform_device的id。弄多个虚拟总线的话，弄多个platform_device就行了。
