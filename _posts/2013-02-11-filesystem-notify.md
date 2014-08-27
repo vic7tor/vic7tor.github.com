@@ -28,6 +28,13 @@ Dnotify已经挂了，Filesystem wide access notification这个太高级了，�
         return syscall (__NR_inotify_add_watch, fd, name, mask);
     }
 
+##新版的在
+sys/inotify.h
+
+glibc的应该也有。
+
+Android在libc中。
+
 #inotify
 
 ##inotify_init
@@ -50,7 +57,7 @@ path你要监视文件的路径，mask是IN_xxx那些宏。
 
 依buf太小返回合适数量的inotify_event。ioctl FIONREAD fd会返回inotify_event的数量。
 
-fd不是wd。
+fd不是wd。wd是用来区分inotify_event的。
 
 ##inotify_event
 定义在include/linux/inotify.h还有一些代表事件的宏定义。
@@ -62,6 +69,8 @@ fd不是wd。
         __u32           len;            /* length (including nulls) of name */
         char            name[0];        /* stub for possible name */
     };
+
+说一下长度为零的数组。sizeof name时，长度为0。但是&name时有这个变量的指针。
 
 ##select poll
 可以用select poll fd。

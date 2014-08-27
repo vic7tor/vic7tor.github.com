@@ -1,0 +1,18 @@
+2013.12.23
+#1.mm-qcamera-daemon异常退出
+报：
+E/mm-camera-intf(  214): mm_camera_open:  opened, break out while loop
+E/mm-camera-intf(  214): mm_camera_open: cannot open control fd of '/dev/video1' (Connection timed out)
+
+原因是：
+E/mm-camera-sensor(  277): sensor_get_capabilities:1755 called
+E/mm-camera-sensor(  277):
+F/libc    (  277): Fatal signal 11 (SIGSEGV) at 0x0000001c (code=1), thread 277 
+
+这里导致mm-qcamera-daemon跪了。
+
+然后接着tag为mm-camera-senosr的日志已经换了pid:
+E/mm-camera-sensor( 2001): module_sensor_init:2913 Enter
+E/mm-camera-sensor( 2001): module_sensor_find_sensor_subdev:2579 entity id 1
+
+进程异常退出，内核中有的东西没有释放，导至进程重启后再打开超时。

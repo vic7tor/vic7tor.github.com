@@ -19,6 +19,8 @@ with the thermal management solution and to be a part of it.
 thermal_zone_device_register
 
 ##qc user layer
+qc有专门调thermal的文档，搜thermal这个关键词就能搜到。
+
 内核中根本没有cooling device啊，还有别的原因不能在内核实现这个thermal么？
 
 devices/devices_actions.c 中接收netlink消息，CPU offline online。还有在这个文件有设置GPU的频率。
