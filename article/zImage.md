@@ -37,3 +37,29 @@ arch/arm/boot/.Image.cmd这个文件的内容是：
 
 cmd_objcopy来自scripts/Makefile.lib这个文件的232行。
 
+看arch/arm/boot/compressed/.piggy.gzip.o.cmd:
+
+这个文件是编译arch/arm/boot/compressed/piggy.gzip.S，这个文件是在源代码目录中的啦。
+
+内容是：
+        .section .piggydata,#alloc
+        .globl  input_data
+input_data:
+        .incbin "arch/arm/boot/compressed/piggy.gzip"
+        .globl  input_data_end
+input_data_end:
+
+有input_data和input_data_end就可以定位压缩了的数据了。
+
+#.cmd文件
+生成：
+
+scripts/Kbuild.include中的make-cmd
+
+
+引用：
+
+scripts/Makefile.build：
+
+targets := $(wildcard $(sort $(targets)))
+cmd_files := $(wildcard $(foreach f,$(targets),$(dir $(f)).$(notdir $(f)).cmd))
