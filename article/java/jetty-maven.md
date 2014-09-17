@@ -9,7 +9,7 @@
 <plugin>
   <groupId>org.eclipse.jetty</groupId>
   <artifactId>jetty-maven-plugin</artifactId>
-  <version>9.2.2-SNAPSHOT</version>
+  <version>9.2.2.v20140723</version>
 </plugin>
 
 用第一步生成的是没有plugins的，自己在build下加一个。
